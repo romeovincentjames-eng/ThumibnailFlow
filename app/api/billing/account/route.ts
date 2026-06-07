@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasStripeConfig } from "@/lib/env";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
+import { isUnlimitedBillingAccount } from "@/lib/billingOverrides";
 import { getRepository } from "@/lib/repository";
 import { BILLING_PLANS, POINT_COSTS, TOP_UP_PACKS, getStripePriceId } from "@/lib/points";
 
@@ -15,6 +16,7 @@ export async function GET() {
     return NextResponse.json({
       account,
       ledger,
+      unlimitedCredits: isUnlimitedBillingAccount(account),
       pointCosts: POINT_COSTS,
       stripeConfigured,
       plans: BILLING_PLANS.map((plan) => ({

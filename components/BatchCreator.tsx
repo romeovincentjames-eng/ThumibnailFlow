@@ -39,6 +39,7 @@ type BillingStatus = {
     pointsBalance: number;
     planKey: string;
   };
+  unlimitedCredits: boolean;
   pointCosts: {
     analyzeYouTubeLink: number;
     thumbnailPrompt: number;
@@ -122,7 +123,8 @@ export function BatchCreator() {
   );
   const requiredPoints = creativePointsRequired + thumbnailPointsRequired;
   const pointsBalance = billing?.account.pointsBalance ?? 0;
-  const hasEnoughPoints = Boolean(billing) && pointsBalance >= requiredPoints;
+  const hasUnlimitedCredits = Boolean(billing?.unlimitedCredits);
+  const hasEnoughPoints = Boolean(billing) && (hasUnlimitedCredits || pointsBalance >= requiredPoints);
   const canSubmit =
     videoCount > 0 &&
     formats.length > 0 &&
@@ -629,7 +631,7 @@ export function BatchCreator() {
               {billingError ? <div className="error-box">{billingError}</div> : null}
               {billing && !hasEnoughPoints ? (
                 <div className="error-box">
-                  This batch needs {requiredPoints} points. You have {pointsBalance}. Add points to generate.
+                  This batch needs {requiredPoints} points. You have {pointsBalance.toLocaleString()}. Add points to generate.
                 </div>
               ) : null}
               {error ? <div className="error-box">{error}</div> : null}
@@ -681,7 +683,7 @@ export function BatchCreator() {
               <div className="points-card">
                 <div>
                   <span className="section-eyebrow">Point Balance</span>
-                  <strong>{billing ? pointsBalance : "..."}</strong>
+                  <strong>{hasUnlimitedCredits ? "Unlimited" : billing ? pointsBalance.toLocaleString() : "..."}</strong>
                   <p>
                     This run costs {requiredPoints} points: {creativePointsRequired} for analysis and prompts,
                     {thumbnailPointsRequired} for thumbnails and formats.

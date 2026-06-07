@@ -1,5 +1,6 @@
 import { getLocalStore } from "@/lib/localStore";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { applyBillingAccountOverrides, isUnlimitedBillingAccount } from "@/lib/billingOverrides";
 import type {
   BatchJob,
   BatchStatus,
@@ -135,19 +136,20 @@ const toBatch = (row: Record<string, any>): BatchJob => ({
   updatedAt: row.updated_at
 });
 
-const toBillingAccount = (row: Record<string, any>): BillingAccount => ({
-  id: row.id,
-  userId: row.user_id ?? null,
-  email: row.email ?? null,
-  stripeCustomerId: row.stripe_customer_id ?? null,
-  stripeSubscriptionId: row.stripe_subscription_id ?? null,
-  stripeSubscriptionStatus: row.stripe_subscription_status ?? null,
-  planKey: row.plan_key ?? "free",
-  pointsBalance: row.points_balance ?? 0,
-  lifetimePointsPurchased: row.lifetime_points_purchased ?? 0,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at
-});
+const toBillingAccount = (row: Record<string, any>): BillingAccount =>
+  applyBillingAccountOverrides({
+    id: row.id,
+    userId: row.user_id ?? null,
+    email: row.email ?? null,
+    stripeCustomerId: row.stripe_customer_id ?? null,
+    stripeSubscriptionId: row.stripe_subscription_id ?? null,
+    stripeSubscriptionStatus: row.stripe_subscription_status ?? null,
+    planKey: row.plan_key ?? "free",
+    pointsBalance: row.points_balance ?? 0,
+    lifetimePointsPurchased: row.lifetime_points_purchased ?? 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  });
 
 const toPointLedgerEntry = (row: Record<string, any>): PointLedgerEntry => ({
   id: row.id,
@@ -275,7 +277,7 @@ class Repository {
         reference: `free_trial:${account.id}`,
         metadata: { planKey: "free" }
       });
-      return account;
+      return applyBillingAccountOverrides(account);
     }
 
     const account: BillingAccount = {
@@ -301,7 +303,7 @@ class Repository {
       metadata: { planKey: "free" },
       createdAt: now()
     });
-    return account;
+    return applyBillingAccountOverrides(account);
   }
 
   async getBillingAccount(accountId: string) {
@@ -318,7 +320,9 @@ class Repository {
       return toBillingAccount(data);
     }
 
-    return getLocalStore().billingAccounts.find((account) => account.id === accountId) ?? null;
+    return applyBillingAccountOverrides(
+      getLocalStore().billingAccounts.find((account) => account.id === accountId) ?? null
+    );
   }
 
   async getBillingAccountByUserId(userId: string) {
@@ -335,7 +339,9 @@ class Repository {
       return toBillingAccount(data);
     }
 
-    return getLocalStore().billingAccounts.find((account) => account.userId === userId) ?? null;
+    return applyBillingAccountOverrides(
+      getLocalStore().billingAccounts.find((account) => account.userId === userId) ?? null
+    );
   }
 
   async getBillingAccountByStripeCustomerId(stripeCustomerId: string) {
@@ -353,7 +359,9 @@ class Repository {
     }
 
     return (
-      getLocalStore().billingAccounts.find((account) => account.stripeCustomerId === stripeCustomerId) ?? null
+      applyBillingAccountOverrides(
+        getLocalStore().billingAccounts.find((account) => account.stripeCustomerId === stripeCustomerId) ?? null
+      )
     );
   }
 
@@ -375,7 +383,7 @@ class Repository {
     const account = getLocalStore().billingAccounts.find((item) => item.id === accountId);
     if (!account) return null;
     Object.assign(account, patch, { updatedAt: now() });
-    return account;
+    return applyBillingAccountOverrides(account);
   }
 
   async applyPointsDelta(input: {
@@ -386,6 +394,10 @@ class Repository {
     metadata?: Record<string, unknown>;
   }) {
     const supabase = getSupabaseAdmin();
+    const unlimitedAccount = await this.getBillingAccount(input.accountId);
+    if (isUnlimitedBillingAccount(unlimitedAccount)) {
+      return unlimitedAccount;
+    }
 
     if (supabase) {
       const { data, error } = await supabase.rpc("apply_points_delta", {

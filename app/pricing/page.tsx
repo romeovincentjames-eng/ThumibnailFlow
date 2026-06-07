@@ -3,6 +3,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { MarketingFooter, MarketingNav } from "@/components/Marketing";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
+import { isUnlimitedBillingAccount } from "@/lib/billingOverrides";
 import { hasStripeConfig } from "@/lib/env";
 import {
   BILLING_PLANS,
@@ -28,6 +29,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
   const billing = user ? await getBillingAccountSnapshot() : null;
   const isLoggedIn = Boolean(user);
   const stripeSecretConfigured = hasStripeConfig();
+  const hasUnlimitedCredits = Boolean(billing?.account && isUnlimitedBillingAccount(billing.account));
   const oneVideoExample = estimateVideoPoints({ thumbnailCount: 1, formatCount: 4 });
   const threeConceptExample = estimateVideoPoints({ thumbnailCount: 3, formatCount: 4 });
 
@@ -57,10 +59,18 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             <span className="section-eyebrow">Your Account</span>
             {isLoggedIn ? (
               <>
-                <h2>{billing?.account ? `${billing.account.pointsBalance.toLocaleString()} points` : "Account pending"}</h2>
+                <h2>
+                  {billing?.account
+                    ? hasUnlimitedCredits
+                      ? "Unlimited credits"
+                      : `${billing.account.pointsBalance.toLocaleString()} points`
+                    : "Account pending"}
+                </h2>
                 <p>
                   {billing?.account
-                    ? `Plan: ${billing.account.planKey}. Credits are tied to ${user?.email}.`
+                    ? hasUnlimitedCredits
+                      ? `Plan: Agency. Owner credits are tied to ${user?.email}.`
+                      : `Plan: ${billing.account.planKey}. Credits are tied to ${user?.email}.`
                     : "Run the billing schema in Supabase to activate account balances."}
                 </p>
               </>

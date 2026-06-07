@@ -10,7 +10,13 @@ export async function getOrCreateBillingAccount() {
 
   const repository = getRepository();
   const existing = await repository.getBillingAccountByUserId(user.id);
-  if (existing) return existing;
+  if (existing) {
+    if (user.email && existing.email !== user.email) {
+      return (await repository.updateBillingAccount(existing.id, { email: user.email })) ?? existing;
+    }
+
+    return existing;
+  }
 
   return repository.createBillingAccount({
     userId: user.id,
@@ -22,5 +28,11 @@ export async function getCurrentBillingAccount() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  return getRepository().getBillingAccountByUserId(user.id);
+  const repository = getRepository();
+  const account = await repository.getBillingAccountByUserId(user.id);
+  if (account && user.email && account.email !== user.email) {
+    return (await repository.updateBillingAccount(account.id, { email: user.email })) ?? account;
+  }
+
+  return account;
 }
