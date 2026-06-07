@@ -73,6 +73,7 @@ export type Video = {
   title: string | null;
   description: string | null;
   generatedTitle: string | null;
+  generatedTitleOptions: string[];
   generatedDescription: string | null;
   hashtags: string[];
   thumbnailPrompt: string | null;
@@ -111,6 +112,7 @@ export type BatchWithVideos = BatchJob & {
 
 export type CreativePack = {
   improvedTitle: string;
+  titleOptions: string[];
   improvedDescription: string;
   hashtags: string[];
   thumbnailPrompt: string;

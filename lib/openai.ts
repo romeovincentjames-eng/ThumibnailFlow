@@ -43,7 +43,7 @@ export async function generateCreativePack(input: CreativeInput): Promise<Creati
 
   const system = [
     "You are ThumbnailFlow Batch, a video packaging strategist.",
-    "Return only strict JSON with improvedTitle, improvedDescription, hashtags, and thumbnailPrompt.",
+    "Return only strict JSON with improvedTitle, titleOptions, improvedDescription, hashtags, and thumbnailPrompt.",
     "Make thumbnails highly clickable, readable, and honest to the video's topic."
   ].join(" ");
 
@@ -57,6 +57,7 @@ Transcript: ${input.transcript || "None"}
 
 Create:
 - 1 improved YouTube title under 72 characters
+- 5 title options under 72 characters each. Make the first title option exactly match improvedTitle
 - 1 improved YouTube description, 2 compact paragraphs
 - 5 to 8 hashtags
 - 1 detailed thumbnail prompt
@@ -211,6 +212,8 @@ function getOpenAIImageSize(format: OutputFormat) {
 
 function normalizeCreativePack(candidate: Partial<CreativePack>, input: CreativeInput): CreativePack {
   const fallback = fallbackCreativePack(input);
+  const improvedTitle = clean(candidate.improvedTitle, fallback.improvedTitle, 90);
+  const titleOptions = normalizeTitleOptions(candidate.titleOptions, improvedTitle, fallback.titleOptions);
   const hashtags = Array.isArray(candidate.hashtags)
     ? candidate.hashtags
         .map((tag) => String(tag).trim())
@@ -220,11 +223,25 @@ function normalizeCreativePack(candidate: Partial<CreativePack>, input: Creative
     : fallback.hashtags;
 
   return {
-    improvedTitle: clean(candidate.improvedTitle, fallback.improvedTitle, 90),
+    improvedTitle,
+    titleOptions,
     improvedDescription: clean(candidate.improvedDescription, fallback.improvedDescription, 900),
     hashtags,
     thumbnailPrompt: clean(candidate.thumbnailPrompt, fallback.thumbnailPrompt, 1600)
   };
+}
+
+function normalizeTitleOptions(value: unknown, improvedTitle: string, fallback: string[]) {
+  const rawTitles = Array.isArray(value) ? value : fallback;
+  const uniqueTitles = [improvedTitle, ...rawTitles]
+    .map((title) => clean(title, "", 90))
+    .filter(Boolean)
+    .reduce<string[]>((titles, title) => {
+      const normalized = title.toLowerCase();
+      return titles.some((existing) => existing.toLowerCase() === normalized) ? titles : [...titles, title];
+    }, []);
+
+  return uniqueTitles.slice(0, 5);
 }
 
 function clean(value: unknown, fallback: string, maxLength: number) {
@@ -248,6 +265,13 @@ function fallbackCreativePack(input: CreativeInput): CreativePack {
 
   return {
     improvedTitle: `${shortTopic}: What Viewers Need to Know`,
+    titleOptions: [
+      `${shortTopic}: What Viewers Need to Know`,
+      `The Fastest Way to Understand ${shortTopic}`,
+      `${shortTopic}: The Big Takeaway`,
+      `What Everyone Misses About ${shortTopic}`,
+      `${shortTopic}: Before You Watch`
+    ].map((title) => title.slice(0, 90)),
     improvedDescription: [
       `A sharper look at ${topic}, built for viewers who want the key ideas without the noise.`,
       input.notes ? `Creator notes: ${input.notes}` : "This batch was generated in local demo mode."

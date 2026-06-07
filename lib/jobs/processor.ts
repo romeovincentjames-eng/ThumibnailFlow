@@ -210,6 +210,7 @@ async function processVideo(video: Video, batch: BatchJob, reservation?: PointRe
 
     await repository.updateVideo(video.id, {
       generatedTitle: creative.improvedTitle,
+      generatedTitleOptions: creative.titleOptions,
       generatedDescription: creative.improvedDescription,
       hashtags: creative.hashtags,
       thumbnailPrompt: creative.thumbnailPrompt,
@@ -294,7 +295,7 @@ async function createThumbnailForFormat(input: {
   ].join("/");
   const stored = await uploadBuffer(normalizedImage, storagePath, "image/png");
 
-  return repository.createThumbnail({
+  const thumbnail = await repository.createThumbnail({
     batchJobId: input.batch.id,
     videoId: input.video.id,
     conceptNumber: input.conceptNumber,
@@ -307,6 +308,7 @@ async function createThumbnailForFormat(input: {
   });
 
   await refreshBatchProgress(input.batch.id);
+  return thumbnail;
 }
 
 async function ensureCreative(video: Video, batch: BatchJob) {
@@ -318,6 +320,7 @@ async function ensureCreative(video: Video, batch: BatchJob) {
       metadata,
       creative: {
         improvedTitle: video.generatedTitle,
+        titleOptions: video.generatedTitleOptions.length ? video.generatedTitleOptions : [video.generatedTitle],
         improvedDescription: video.generatedDescription,
         hashtags: video.hashtags,
         thumbnailPrompt: video.thumbnailPrompt
@@ -341,6 +344,7 @@ async function ensureCreative(video: Video, batch: BatchJob) {
 
   await repository.updateVideo(video.id, {
     generatedTitle: creative.improvedTitle,
+    generatedTitleOptions: creative.titleOptions,
     generatedDescription: creative.improvedDescription,
     hashtags: creative.hashtags,
     thumbnailPrompt: creative.thumbnailPrompt

@@ -10,8 +10,8 @@ const features = [
   },
   {
     icon: <WandSparkles size={22} />,
-    title: "AI Copy And Prompting",
-    text: "Generate an improved title, description, hashtags, and a thumbnail prompt for each video."
+    title: "Title Generator And Copy",
+    text: "Generate multiple clickable title ideas, a primary title, description, hashtags, and thumbnail prompt for each video."
   },
   {
     icon: <Images size={22} />,

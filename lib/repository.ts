@@ -70,6 +70,7 @@ type VideoPatch = Partial<
     | "title"
     | "description"
     | "generatedTitle"
+    | "generatedTitleOptions"
     | "generatedDescription"
     | "hashtags"
     | "thumbnailPrompt"
@@ -177,6 +178,7 @@ const toVideo = (row: Record<string, any>): Video => ({
   title: row.title,
   description: row.description,
   generatedTitle: row.generated_title,
+  generatedTitleOptions: row.generated_title_options ?? [],
   generatedDescription: row.generated_description,
   hashtags: row.hashtags ?? [],
   thumbnailPrompt: row.thumbnail_prompt,
@@ -217,6 +219,7 @@ function toSnakePatch(patch: VideoPatch | BatchPatch | ThumbnailPatch | BillingA
     else if (key === "referenceImageUrl") mapped.reference_image_url = value;
     else if (key === "perVideoThumbnailCount") mapped.per_video_thumbnail_count = value;
     else if (key === "generatedTitle") mapped.generated_title = value;
+    else if (key === "generatedTitleOptions") mapped.generated_title_options = value;
     else if (key === "generatedDescription") mapped.generated_description = value;
     else if (key === "thumbnailPrompt") mapped.thumbnail_prompt = value;
     else if (key === "statusDetail") mapped.status_detail = value;
@@ -619,6 +622,7 @@ class Repository {
       title: input.title,
       description: input.description,
       generatedTitle: null,
+      generatedTitleOptions: [],
       generatedDescription: null,
       hashtags: [],
       thumbnailPrompt: null,

@@ -162,6 +162,11 @@ function VideoResult({
   const [isBusy, setIsBusy] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const concepts = groupThumbnailsByConcept(video.thumbnails);
+  const titleOptions = video.generatedTitleOptions.length
+    ? video.generatedTitleOptions
+    : video.generatedTitle
+      ? [video.generatedTitle]
+      : [];
   const sourceLabel =
     video.sourceType === "uploaded_video"
       ? video.uploadedVideoName ?? video.title ?? "Uploaded video"
@@ -235,6 +240,23 @@ function VideoResult({
 
       <div className="result-grid">
         <div className="copy-stack">
+          <div className="copy-block">
+            <h3>Generated Titles</h3>
+            {titleOptions.length ? (
+              <ol className="title-options-list">
+                {titleOptions.map((title, index) => (
+                  <li key={`${title}-${index}`}>
+                    <span>{index + 1}</span>
+                    <strong>{title}</strong>
+                    {index === 0 ? <em>Primary</em> : null}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p>Title ideas will appear after metadata analysis.</p>
+            )}
+          </div>
+
           <div className="copy-block">
             <h3>Generated Description</h3>
             <p>{video.generatedDescription ?? video.description ?? "Waiting for analysis."}</p>

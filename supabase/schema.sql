@@ -67,6 +67,7 @@ create table if not exists public.videos (
   title text,
   description text,
   generated_title text,
+  generated_title_options text[] not null default array[]::text[],
   generated_description text,
   hashtags text[] not null default array[]::text[],
   thumbnail_prompt text,
@@ -127,6 +128,12 @@ alter table public.videos add column if not exists uploaded_video_url text;
 alter table public.videos add column if not exists uploaded_video_name text;
 alter table public.videos add column if not exists per_video_thumbnail_count integer;
 alter table public.videos add column if not exists status_detail text;
+alter table public.videos add column if not exists generated_title_options text[] not null default array[]::text[];
+
+update public.videos
+set generated_title_options = array[generated_title]
+where generated_title is not null
+  and coalesce(array_length(generated_title_options, 1), 0) = 0;
 
 alter table public.thumbnails add column if not exists batch_job_id uuid references public.batch_jobs(id) on delete cascade;
 alter table public.thumbnails add column if not exists concept_number integer not null default 1;
