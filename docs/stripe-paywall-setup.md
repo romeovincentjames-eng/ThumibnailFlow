@@ -60,7 +60,11 @@ Listen for these events:
 
 ## Point costs
 
-- `10` points = one generated thumbnail image
-- `2` points = AI title, description, hashtags, and thumbnail prompt per video
-- `5` points = apply generated title, description, and thumbnail to YouTube
+- `5` points = analyze a YouTube link
+- `5` points = generate thumbnail prompt and creative copy
+- `25-40` points = generate one AI thumbnail concept (`30` points currently)
+- `25-40` points = regenerate one thumbnail (`30` points currently)
+- `10-20` points = create a set of 3 alternate formats (`15` points currently)
+- `10-25` points = apply generated title, description, and thumbnail to YouTube (`15` points currently)
+- `50-80` points = typical full batch for one video
 - Failed generation steps refund unused reserved points

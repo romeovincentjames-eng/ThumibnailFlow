@@ -64,10 +64,8 @@ export async function POST(request: NextRequest) {
     const perVideoCounts = Array.from({ length: sourceCount }, (_item, index) =>
       parseOptionalThumbnailCount(formData.get(`thumbnailCount-${index}`))
     );
-    const totalImagesRequested = perVideoCounts.reduce(
-      (total, count) => total + (count ?? globalThumbnailCount) * formats.length,
-      0
-    );
+    const thumbnailCounts = perVideoCounts.map((count) => count ?? globalThumbnailCount);
+    const totalImagesRequested = thumbnailCounts.reduce((total, count) => total + count * formats.length, 0);
 
     if (totalImagesRequested > MAX_IMAGES_PER_BATCH) {
       return NextResponse.json(
@@ -81,8 +79,8 @@ export async function POST(request: NextRequest) {
     const repository = getRepository();
     const account = await getOrCreateBillingAccount();
     const pointsRequired = estimateBatchPoints({
-      videoCount: sourceCount,
-      totalImages: totalImagesRequested
+      thumbnailCounts,
+      formatCount: formats.length
     });
 
     if (account.pointsBalance < pointsRequired) {

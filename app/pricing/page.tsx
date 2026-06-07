@@ -3,7 +3,14 @@ import { ArrowRight, Check } from "lucide-react";
 import { MarketingFooter, MarketingNav } from "@/components/Marketing";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
-import { BILLING_PLANS, POINT_COSTS, TOP_UP_PACKS, getStripePriceId } from "@/lib/points";
+import {
+  BILLING_PLANS,
+  POINT_COSTS,
+  POINT_COST_RANGES,
+  TOP_UP_PACKS,
+  estimateVideoPoints,
+  getStripePriceId
+} from "@/lib/points";
 
 type PricingPageProps = {
   searchParams?: {
@@ -19,6 +26,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
   const user = await getCurrentUser();
   const billing = user ? await getBillingAccountSnapshot() : null;
   const isLoggedIn = Boolean(user);
+  const oneVideoExample = estimateVideoPoints({ thumbnailCount: 1, formatCount: 4 });
+  const threeConceptExample = estimateVideoPoints({ thumbnailCount: 3, formatCount: 4 });
 
   return (
     <main className="marketing-site">
@@ -64,34 +73,73 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               </>
             )}
           </article>
-          <article className="pricing-rules-card">
+          <article className="pricing-rules-card pricing-rules-card-wide">
             <span className="section-eyebrow">Point System</span>
-            <h2>Simple usage pricing</h2>
-            <ul>
-              <li>
-                <Check aria-hidden="true" size={16} />
-                {POINT_COSTS.thumbnailImage} points per generated thumbnail image
-              </li>
-              <li>
-                <Check aria-hidden="true" size={16} />
-                {POINT_COSTS.creativePackPerVideo} points per AI title, description, hashtags, and prompt
-              </li>
-              <li>
-                <Check aria-hidden="true" size={16} />
-                {POINT_COSTS.youtubeApply} points to apply title, description, and thumbnail to YouTube
-              </li>
-              <li>
-                <Check aria-hidden="true" size={16} />
-                Failed generation steps refund unused reserved points
-              </li>
-            </ul>
+            <h2>Credit costs by action</h2>
+            <table className="pricing-rules-table">
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Analyze YouTube link</td>
+                  <td>{POINT_COSTS.analyzeYouTubeLink} points</td>
+                </tr>
+                <tr>
+                  <td>Generate thumbnail prompt</td>
+                  <td>{POINT_COSTS.thumbnailPrompt} points</td>
+                </tr>
+                <tr>
+                  <td>Generate 1 AI thumbnail</td>
+                  <td>
+                    {POINT_COST_RANGES.thumbnailImage.min}-{POINT_COST_RANGES.thumbnailImage.max} points
+                    <span>{POINT_COSTS.thumbnailImage} today</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Regenerate thumbnail</td>
+                  <td>
+                    {POINT_COST_RANGES.thumbnailRegeneration.min}-{POINT_COST_RANGES.thumbnailRegeneration.max} points
+                    <span>{POINT_COSTS.thumbnailRegeneration} today</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Create 3 formats</td>
+                  <td>
+                    {POINT_COST_RANGES.threeFormatSet.min}-{POINT_COST_RANGES.threeFormatSet.max} points
+                    <span>{POINT_COSTS.threeFormatSet} today</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Apply thumbnail to YouTube</td>
+                  <td>
+                    {POINT_COST_RANGES.youtubeApply.min}-{POINT_COST_RANGES.youtubeApply.max} points
+                    <span>{POINT_COSTS.youtubeApply} today</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Full batch for 1 video</td>
+                  <td>
+                    {POINT_COST_RANGES.fullBatchPerVideo.min}-{POINT_COST_RANGES.fullBatchPerVideo.max} points
+                    <span>{oneVideoExample} typical</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="pricing-refund-note">
+              Failed generation steps refund unused reserved points automatically.
+            </p>
           </article>
           <article className="pricing-rules-card">
             <span className="section-eyebrow">Example</span>
             <h2>3 concepts × 4 formats</h2>
             <p>
-              One video with 12 generated images uses 120 image points plus 2 copy points,
-              for a total of 122 points.
+              One video with three thumbnail concepts and every format uses {threeConceptExample} points:
+              {POINT_COSTS.creativePackPerVideo} for analysis and prompt work, then {POINT_COSTS.thumbnailImage}
+              plus {POINT_COSTS.threeFormatSet} format points per concept.
             </p>
           </article>
         </div>

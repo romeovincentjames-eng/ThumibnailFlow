@@ -40,9 +40,15 @@ type BillingStatus = {
     planKey: string;
   };
   pointCosts: {
+    analyzeYouTubeLink: number;
+    thumbnailPrompt: number;
     creativePackPerVideo: number;
     thumbnailImage: number;
+    thumbnailRegeneration: number;
+    threeFormatSet: number;
     youtubeApply: number;
+    fullBatchPerVideoMin: number;
+    fullBatchPerVideoMax: number;
     clippingAnalyzer: number;
   };
   stripeConfigured: boolean;
@@ -96,12 +102,25 @@ export function BatchCreator() {
       ? `This batch would generate ${totalImages} images. Reduce thumbnails or formats to stay at ${MAX_IMAGES_PER_BATCH} or fewer.`
       : null;
   const pointCosts = billing?.pointCosts ?? {
-    creativePackPerVideo: 2,
-    thumbnailImage: 10,
-    youtubeApply: 5,
+    analyzeYouTubeLink: 5,
+    thumbnailPrompt: 5,
+    creativePackPerVideo: 10,
+    thumbnailImage: 30,
+    thumbnailRegeneration: 30,
+    threeFormatSet: 15,
+    youtubeApply: 15,
+    fullBatchPerVideoMin: 50,
+    fullBatchPerVideoMax: 80,
     clippingAnalyzer: 20
   };
-  const requiredPoints = videoCount * pointCosts.creativePackPerVideo + totalImages * pointCosts.thumbnailImage;
+  const formatSetPoints = getFormatSetPoints(formats.length, pointCosts.threeFormatSet);
+  const conceptPointCost = pointCosts.thumbnailImage + formatSetPoints;
+  const creativePointsRequired = videoCount * pointCosts.creativePackPerVideo;
+  const thumbnailPointsRequired = rowIndexes.reduce(
+    (total, index) => total + getRowThumbnailCount(index) * conceptPointCost,
+    0
+  );
+  const requiredPoints = creativePointsRequired + thumbnailPointsRequired;
   const pointsBalance = billing?.account.pointsBalance ?? 0;
   const hasEnoughPoints = Boolean(billing) && pointsBalance >= requiredPoints;
   const canSubmit =
@@ -664,8 +683,8 @@ export function BatchCreator() {
                   <span className="section-eyebrow">Point Balance</span>
                   <strong>{billing ? pointsBalance : "..."}</strong>
                   <p>
-                    This run costs {requiredPoints} points: {videoCount * pointCosts.creativePackPerVideo} for copy
-                    and {totalImages * pointCosts.thumbnailImage} for images.
+                    This run costs {requiredPoints} points: {creativePointsRequired} for analysis and prompts,
+                    {thumbnailPointsRequired} for thumbnails and formats.
                   </p>
                 </div>
                 <a className="secondary-button compact-button" href="/pricing">
@@ -722,4 +741,9 @@ function getRowLabel(index: number, urls: string[], uploads: File[], sourceType:
 
 function getRowKey(index: number, urls: string[], uploads: File[], sourceType: SourceType) {
   return `${sourceType}-${index}-${getRowLabel(index, urls, uploads, sourceType)}`;
+}
+
+function getFormatSetPoints(formatCount: number, threeFormatSetPoints: number) {
+  const extraFormats = Math.max(0, formatCount - 1);
+  return extraFormats === 0 ? 0 : Math.ceil(extraFormats / 3) * threeFormatSetPoints;
 }

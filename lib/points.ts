@@ -2,10 +2,24 @@ import { getEnv } from "@/lib/env";
 import type { BillingPlanKey, OutputFormat, ThumbnailCountOption } from "@/lib/types";
 
 export const POINT_COSTS = {
-  creativePackPerVideo: 2,
-  thumbnailImage: 10,
-  youtubeApply: 5,
+  analyzeYouTubeLink: 5,
+  thumbnailPrompt: 5,
+  creativePackPerVideo: 10,
+  thumbnailImage: 30,
+  thumbnailRegeneration: 30,
+  threeFormatSet: 15,
+  youtubeApply: 15,
+  fullBatchPerVideoMin: 50,
+  fullBatchPerVideoMax: 80,
   clippingAnalyzer: 20
+} as const;
+
+export const POINT_COST_RANGES = {
+  thumbnailImage: { min: 25, max: 40 },
+  thumbnailRegeneration: { min: 25, max: 40 },
+  threeFormatSet: { min: 10, max: 20 },
+  youtubeApply: { min: 10, max: 25 },
+  fullBatchPerVideo: { min: 50, max: 80 }
 } as const;
 
 export type PaidPlanKey = Exclude<BillingPlanKey, "free">;
@@ -102,10 +116,33 @@ export function getStripePriceId(priceEnv: string) {
   return getEnv(priceEnv);
 }
 
-export function estimateBatchPoints(input: {
-  videoCount: number;
-  totalImages: number;
-}) {
+export function estimateFormatSetPoints(formatCount: number) {
+  const extraFormats = Math.max(0, formatCount - 1);
+  return extraFormats === 0 ? 0 : Math.ceil(extraFormats / 3) * POINT_COSTS.threeFormatSet;
+}
+
+export function estimateBatchPoints(input:
+  | {
+      thumbnailCounts: number[];
+      formatCount: number;
+    }
+  | {
+      videoCount: number;
+      totalImages: number;
+    }
+) {
+  if ("thumbnailCounts" in input) {
+    return input.thumbnailCounts.reduce(
+      (total, thumbnailCount) =>
+        total +
+        estimateVideoPoints({
+          thumbnailCount,
+          formatCount: input.formatCount
+        }),
+      0
+    );
+  }
+
   return input.videoCount * POINT_COSTS.creativePackPerVideo + input.totalImages * POINT_COSTS.thumbnailImage;
 }
 
@@ -115,16 +152,16 @@ export function estimateVideoPoints(input: {
 }) {
   return (
     POINT_COSTS.creativePackPerVideo +
-    Number(input.thumbnailCount) * input.formatCount * POINT_COSTS.thumbnailImage
+    Number(input.thumbnailCount) * (POINT_COSTS.thumbnailImage + estimateFormatSetPoints(input.formatCount))
   );
 }
 
 export function estimateConceptPoints(formats: OutputFormat[]) {
-  return formats.length * POINT_COSTS.thumbnailImage;
+  return POINT_COSTS.thumbnailRegeneration + estimateFormatSetPoints(formats.length);
 }
 
 export function estimateThumbnailPoints() {
-  return POINT_COSTS.thumbnailImage;
+  return POINT_COSTS.thumbnailRegeneration;
 }
 
 export function isInsufficientPointsError(error: unknown) {

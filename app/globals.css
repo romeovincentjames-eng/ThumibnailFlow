@@ -535,6 +535,10 @@ a {
   box-shadow: 0 18px 50px rgba(17, 24, 39, 0.04);
 }
 
+.pricing-rules-card-wide {
+  grid-column: span 2;
+}
+
 .pricing-rules-card h2 {
   margin: 0;
   color: var(--text);
@@ -564,6 +568,53 @@ a {
 .pricing-rules-card li svg {
   flex: 0 0 auto;
   color: var(--good);
+}
+
+.pricing-rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid rgba(217, 224, 234, 0.92);
+  border-radius: 8px;
+  color: var(--ink-soft);
+}
+
+.pricing-rules-table th,
+.pricing-rules-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(217, 224, 234, 0.82);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pricing-rules-table th {
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 0.74rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.pricing-rules-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.pricing-rules-table td:last-child {
+  width: 38%;
+  color: var(--text);
+  font-weight: 850;
+}
+
+.pricing-rules-table span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.pricing-refund-note {
+  font-weight: 750;
 }
 
 .section-heading-row {
@@ -1786,6 +1837,10 @@ a {
 
   .hero-content {
     width: min(680px, 100%);
+  }
+
+  .pricing-rules-card-wide {
+    grid-column: auto;
   }
 
   .cta-inner,
