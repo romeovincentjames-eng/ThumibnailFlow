@@ -24,9 +24,6 @@ export async function POST(request: NextRequest) {
     }
 
     const priceId = getStripePriceId(item.priceEnv);
-    if (!priceId) {
-      return failure(`Missing Stripe price ID: ${item.priceEnv}.`, isFormRequest, appUrl);
-    }
 
     const repository = getRepository();
     let account = await getOrCreateBillingAccount();
@@ -47,12 +44,7 @@ export async function POST(request: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode: kind === "plan" ? "subscription" : "payment",
       customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1
-        }
-      ],
+      line_items: [buildCheckoutLineItem({ kind, item, priceId })],
       allow_promotion_codes: true,
       metadata: {
         accountId: account.id,
@@ -86,6 +78,47 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return failure(error instanceof Error ? error.message : "Could not start checkout.", isFormRequest, appUrl);
   }
+}
+
+function buildCheckoutLineItem({
+  kind,
+  item,
+  priceId
+}: {
+  kind: CheckoutItemKind;
+  item: NonNullable<ReturnType<typeof getCheckoutItem>>;
+  priceId: string;
+}) {
+  if (priceId) {
+    return {
+      price: priceId,
+      quantity: 1
+    };
+  }
+
+  return {
+    price_data: {
+      currency: "usd",
+      unit_amount: item.unitAmount,
+      recurring: kind === "plan" ? { interval: "month" as const } : undefined,
+      product_data: {
+        name: kind === "plan" ? `ThumbnailFlow ${item.name}` : `ThumbnailFlow ${item.name} Top-up`,
+        metadata: {
+          app: "thumbnailflow_batch",
+          kind,
+          key: item.key,
+          points: String(item.points)
+        }
+      },
+      metadata: {
+        app: "thumbnailflow_batch",
+        kind,
+        key: item.key,
+        points: String(item.points)
+      }
+    },
+    quantity: 1
+  };
 }
 
 async function parseCheckoutRequest(request: NextRequest): Promise<{ kind: CheckoutItemKind; key: string }> {

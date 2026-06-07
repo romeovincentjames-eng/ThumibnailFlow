@@ -30,6 +30,7 @@ export type BillingPlan = {
   key: PaidPlanKey;
   name: string;
   price: string;
+  unitAmount: number;
   points: number;
   priceEnv: string;
   description: string;
@@ -40,6 +41,7 @@ export type TopUpPack = {
   key: TopUpKey;
   name: string;
   price: string;
+  unitAmount: number;
   points: number;
   priceEnv: string;
 };
@@ -49,6 +51,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     key: "starter",
     name: "Starter",
     price: "$19/mo",
+    unitAmount: 1900,
     points: 300,
     priceEnv: "STRIPE_PRICE_STARTER",
     description: "For solo creators validating a thumbnail workflow."
@@ -57,6 +60,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     key: "creator",
     name: "Creator",
     price: "$49/mo",
+    unitAmount: 4900,
     points: 900,
     priceEnv: "STRIPE_PRICE_CREATOR",
     description: "For channels publishing multiple videos every week.",
@@ -66,6 +70,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     key: "pro",
     name: "Pro",
     price: "$99/mo",
+    unitAmount: 9900,
     points: 2000,
     priceEnv: "STRIPE_PRICE_PRO",
     description: "For frequent publishing teams with deeper batch volume."
@@ -74,6 +79,7 @@ export const BILLING_PLANS: BillingPlan[] = [
     key: "agency",
     name: "Agency",
     price: "$199/mo",
+    unitAmount: 19900,
     points: 4500,
     priceEnv: "STRIPE_PRICE_AGENCY",
     description: "For production teams and multi-channel operators."
@@ -85,6 +91,7 @@ export const TOP_UP_PACKS: TopUpPack[] = [
     key: "topup_200",
     name: "200 points",
     price: "$15",
+    unitAmount: 1500,
     points: 200,
     priceEnv: "STRIPE_PRICE_TOPUP_200"
   },
@@ -92,6 +99,7 @@ export const TOP_UP_PACKS: TopUpPack[] = [
     key: "topup_500",
     name: "500 points",
     price: "$29",
+    unitAmount: 2900,
     points: 500,
     priceEnv: "STRIPE_PRICE_TOPUP_500"
   },
@@ -99,6 +107,7 @@ export const TOP_UP_PACKS: TopUpPack[] = [
     key: "topup_1500",
     name: "1,500 points",
     price: "$79",
+    unitAmount: 7900,
     points: 1500,
     priceEnv: "STRIPE_PRICE_TOPUP_1500"
   }
@@ -113,7 +122,8 @@ export function getCheckoutItem(kind: CheckoutItemKind, key: string) {
 }
 
 export function getStripePriceId(priceEnv: string) {
-  return getEnv(priceEnv);
+  const priceId = getEnv(priceEnv);
+  return priceId.startsWith("price_") ? priceId : "";
 }
 
 export function estimateFormatSetPoints(formatCount: number) {

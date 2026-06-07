@@ -3,13 +3,13 @@ import { ArrowRight, Check } from "lucide-react";
 import { MarketingFooter, MarketingNav } from "@/components/Marketing";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
+import { hasStripeConfig } from "@/lib/env";
 import {
   BILLING_PLANS,
   POINT_COSTS,
   POINT_COST_RANGES,
   TOP_UP_PACKS,
-  estimateVideoPoints,
-  getStripePriceId
+  estimateVideoPoints
 } from "@/lib/points";
 
 type PricingPageProps = {
@@ -26,6 +26,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
   const user = await getCurrentUser();
   const billing = user ? await getBillingAccountSnapshot() : null;
   const isLoggedIn = Boolean(user);
+  const paymentsReady = hasStripeConfig();
   const oneVideoExample = estimateVideoPoints({ thumbnailCount: 1, formatCount: 4 });
   const threeConceptExample = estimateVideoPoints({ thumbnailCount: 3, formatCount: 4 });
 
@@ -176,8 +177,10 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                 <CheckoutButton
                   kind="plan"
                   itemKey={plan.key}
+                  itemName={plan.name}
+                  points={plan.points}
                   featured={Boolean(plan.featured)}
-                  configured={Boolean(getStripePriceId(plan.priceEnv))}
+                  paymentsReady={paymentsReady}
                   isLoggedIn={isLoggedIn}
                 />
               </article>
@@ -203,7 +206,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                 <CheckoutButton
                   kind="topup"
                   itemKey={pack.key}
-                  configured={Boolean(getStripePriceId(pack.priceEnv))}
+                  itemName={pack.name}
+                  points={pack.points}
+                  paymentsReady={paymentsReady}
                   isLoggedIn={isLoggedIn}
                 />
               </article>
@@ -219,20 +224,27 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
 function CheckoutButton({
   kind,
   itemKey,
+  itemName,
+  points,
   featured,
-  configured,
+  paymentsReady,
   isLoggedIn
 }: {
   kind: "plan" | "topup";
   itemKey: string;
+  itemName: string;
+  points: number;
   featured?: boolean;
-  configured: boolean;
+  paymentsReady: boolean;
   isLoggedIn: boolean;
 }) {
+  const purchaseLabel = kind === "plan" ? `Subscribe to ${itemName}` : `Buy ${points.toLocaleString()} points`;
+  const loginLabel = kind === "plan" ? "Log in to subscribe" : "Log in to buy points";
+
   if (!isLoggedIn) {
     return (
       <Link className={featured ? "primary-button" : "secondary-button"} href="/login?next=/pricing">
-        Log in to buy
+        {loginLabel}
         <ArrowRight aria-hidden="true" size={17} />
       </Link>
     );
@@ -242,8 +254,8 @@ function CheckoutButton({
     <form action="/api/stripe/checkout" method="POST">
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="key" value={itemKey} />
-      <button className={featured ? "primary-button" : "secondary-button"} disabled={!configured} type="submit">
-        {configured ? "Checkout" : "Add Stripe price ID"}
+      <button className={featured ? "primary-button" : "secondary-button"} disabled={!paymentsReady} type="submit">
+        {paymentsReady ? purchaseLabel : "Payments unavailable"}
         <ArrowRight aria-hidden="true" size={17} />
       </button>
     </form>

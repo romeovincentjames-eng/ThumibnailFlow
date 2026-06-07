@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hasStripeConfig } from "@/lib/env";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
 import { getRepository } from "@/lib/repository";
-import { BILLING_PLANS, POINT_COSTS, TOP_UP_PACKS, getStripePriceId } from "@/lib/points";
+import { BILLING_PLANS, POINT_COSTS, TOP_UP_PACKS } from "@/lib/points";
 
 export const runtime = "nodejs";
 
@@ -19,11 +19,11 @@ export async function GET() {
       stripeConfigured,
       plans: BILLING_PLANS.map((plan) => ({
         ...plan,
-        configured: Boolean(getStripePriceId(plan.priceEnv))
+        configured: stripeConfigured
       })),
       topUps: TOP_UP_PACKS.map((pack) => ({
         ...pack,
-        configured: Boolean(getStripePriceId(pack.priceEnv))
+        configured: stripeConfigured
       }))
     });
   } catch (error) {
