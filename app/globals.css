@@ -639,6 +639,18 @@ a {
   width: 100%;
 }
 
+.pricing-admin-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(202, 138, 4, 0.24);
+  border-radius: 8px;
+  background: rgba(202, 138, 4, 0.08);
+  color: #8a5a00;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
 .topup-card strong {
   font-size: 2rem;
 }

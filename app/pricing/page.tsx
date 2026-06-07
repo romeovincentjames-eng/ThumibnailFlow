@@ -9,7 +9,8 @@ import {
   POINT_COSTS,
   POINT_COST_RANGES,
   TOP_UP_PACKS,
-  estimateVideoPoints
+  estimateVideoPoints,
+  getStripePriceId
 } from "@/lib/points";
 
 type PricingPageProps = {
@@ -26,7 +27,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
   const user = await getCurrentUser();
   const billing = user ? await getBillingAccountSnapshot() : null;
   const isLoggedIn = Boolean(user);
-  const paymentsReady = hasStripeConfig();
+  const stripeSecretConfigured = hasStripeConfig();
   const oneVideoExample = estimateVideoPoints({ thumbnailCount: 1, formatCount: 4 });
   const threeConceptExample = estimateVideoPoints({ thumbnailCount: 3, formatCount: 4 });
 
@@ -180,7 +181,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                   itemName={plan.name}
                   points={plan.points}
                   featured={Boolean(plan.featured)}
-                  paymentsReady={paymentsReady}
+                  setupMessage={getStripeSetupMessage({
+                    stripeSecretConfigured,
+                    priceConfigured: Boolean(getStripePriceId(plan.priceEnv)),
+                    priceEnv: plan.priceEnv
+                  })}
                   isLoggedIn={isLoggedIn}
                 />
               </article>
@@ -208,7 +213,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                   itemKey={pack.key}
                   itemName={pack.name}
                   points={pack.points}
-                  paymentsReady={paymentsReady}
+                  setupMessage={getStripeSetupMessage({
+                    stripeSecretConfigured,
+                    priceConfigured: Boolean(getStripePriceId(pack.priceEnv)),
+                    priceEnv: pack.priceEnv
+                  })}
                   isLoggedIn={isLoggedIn}
                 />
               </article>
@@ -227,7 +236,7 @@ function CheckoutButton({
   itemName,
   points,
   featured,
-  paymentsReady,
+  setupMessage,
   isLoggedIn
 }: {
   kind: "plan" | "topup";
@@ -235,7 +244,7 @@ function CheckoutButton({
   itemName: string;
   points: number;
   featured?: boolean;
-  paymentsReady: boolean;
+  setupMessage: string | null;
   isLoggedIn: boolean;
 }) {
   const purchaseLabel = kind === "plan" ? `Subscribe to ${itemName}` : `Buy ${points.toLocaleString()} points`;
@@ -251,15 +260,38 @@ function CheckoutButton({
   }
 
   return (
-    <form action="/api/stripe/checkout" method="POST">
-      <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="key" value={itemKey} />
-      <button className={featured ? "primary-button" : "secondary-button"} disabled={!paymentsReady} type="submit">
-        {paymentsReady ? purchaseLabel : "Payments unavailable"}
-        <ArrowRight aria-hidden="true" size={17} />
-      </button>
-    </form>
+    <>
+      <form action="/api/stripe/checkout" method="POST">
+        <input type="hidden" name="kind" value={kind} />
+        <input type="hidden" name="key" value={itemKey} />
+        <button className={featured ? "primary-button" : "secondary-button"} disabled={Boolean(setupMessage)} type="submit">
+          {purchaseLabel}
+          <ArrowRight aria-hidden="true" size={17} />
+        </button>
+      </form>
+      {setupMessage ? <p className="pricing-admin-note">{setupMessage}</p> : null}
+    </>
   );
+}
+
+function getStripeSetupMessage({
+  stripeSecretConfigured,
+  priceConfigured,
+  priceEnv
+}: {
+  stripeSecretConfigured: boolean;
+  priceConfigured: boolean;
+  priceEnv: string;
+}) {
+  if (!stripeSecretConfigured) {
+    return "Admin setup needed: Stripe payments are not connected.";
+  }
+
+  if (!priceConfigured) {
+    return `Admin setup needed: add ${priceEnv}.`;
+  }
+
+  return null;
 }
 
 async function getBillingAccountSnapshot() {
