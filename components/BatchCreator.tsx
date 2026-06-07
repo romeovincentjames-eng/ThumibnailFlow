@@ -221,7 +221,7 @@ export function BatchCreator() {
         method: "POST",
         body: payload
       });
-      const result = await response.json();
+      const result = await readJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result.error ?? "The batch could not be created.");
@@ -229,7 +229,7 @@ export function BatchCreator() {
 
       router.push(`/batches/${result.batchId}`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "The batch could not be created.");
+      setError(await getBatchSubmitError(caught));
       setIsSubmitting(false);
     }
   }
@@ -711,6 +711,44 @@ export function BatchCreator() {
       </section>
     </>
   );
+}
+
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      error: response.ok
+        ? "The server returned an unreadable response."
+        : "The server hit an unexpected error while creating the batch."
+    };
+  }
+}
+
+async function getBatchSubmitError(caught: unknown) {
+  const message = caught instanceof Error ? caught.message : "The batch could not be created.";
+
+  if (!/failed to fetch|load failed|networkerror/i.test(message)) {
+    return message;
+  }
+
+  try {
+    const response = await fetch("/api/app-status", { cache: "no-store" });
+    if (response.ok) {
+      return [
+        "The batch upload was interrupted before the server could answer.",
+        "Refresh the page and try again. If you uploaded a large file, try a smaller PNG/JPG reference image or a shorter video file."
+      ].join(" ");
+    }
+  } catch {
+    // Fall through to the local-server message below.
+  }
+
+  return "The local app server is not reachable right now. Restart the website, refresh this page, then generate again.";
 }
 
 export function AppHeader({ action }: { action?: React.ReactNode }) {
