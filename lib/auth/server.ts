@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-import { getEnv } from "@/lib/env";
+import { getEnv, hasSupabaseAuthConfig } from "@/lib/env";
 
 export function createSupabaseServerClient() {
   const cookieStore = cookies();
@@ -24,7 +24,7 @@ export function createSupabaseServerClient() {
 }
 
 export async function getCurrentUser() {
-  if (!getEnv("NEXT_PUBLIC_SUPABASE_URL") || !getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY")) {
+  if (!hasSupabaseAuthConfig()) {
     return null;
   }
 

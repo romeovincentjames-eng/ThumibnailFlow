@@ -3,13 +3,23 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock, Mail, UserPlus } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/auth/browser";
+import { createSupabaseBrowserClient, getSupabaseBrowserConfigError } from "@/lib/auth/browser";
 
 type AuthMode = "login" | "signup";
 
 export function AuthForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabaseConfigError = useMemo(() => getSupabaseBrowserConfigError(), []);
+  const supabase = useMemo(() => {
+    if (supabaseConfigError) return null;
+
+    try {
+      return createSupabaseBrowserClient();
+    } catch {
+      return null;
+    }
+  }, [supabaseConfigError]);
+  const authConfigError = supabaseConfigError ?? (!supabase ? "Supabase login is not configured correctly yet." : null);
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +33,10 @@ export function AuthForm({ nextPath }: { nextPath: string }) {
     setMessage(null);
 
     try {
+      if (!supabase) {
+        throw new Error(authConfigError ?? "Supabase login is not configured correctly yet.");
+      }
+
       if (mode === "login") {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -114,11 +128,12 @@ export function AuthForm({ nextPath }: { nextPath: string }) {
         </div>
 
         {error ? <div className="error-box">{error}</div> : null}
+        {authConfigError ? <div className="error-box">{authConfigError}</div> : null}
         {message ? <div className="notice-box">{message}</div> : null}
 
         <button
           className="primary-button auth-submit"
-          disabled={isSubmitting || !email || password.length < 6}
+          disabled={Boolean(authConfigError) || isSubmitting || !email || password.length < 6}
           onClick={submit}
           type="button"
         >

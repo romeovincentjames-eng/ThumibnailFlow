@@ -9,15 +9,19 @@ function isUsableEnv(name: string) {
     return false;
   }
 
-  return !/(^your[-_])|placeholder|changeme|example/i.test(value);
+  return !/(^your[-_])|placeholder|changeme|example|undefined|null/i.test(value);
+}
+
+export function hasSupabaseAuthConfig() {
+  return Boolean(
+    isUsableEnv("NEXT_PUBLIC_SUPABASE_URL") &&
+      isUsableEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY") &&
+      getEnv("NEXT_PUBLIC_SUPABASE_URL").startsWith("https://")
+  );
 }
 
 export function hasSupabaseConfig() {
-  return Boolean(
-    isUsableEnv("NEXT_PUBLIC_SUPABASE_URL") &&
-      isUsableEnv("SUPABASE_SERVICE_ROLE_KEY") &&
-      getEnv("NEXT_PUBLIC_SUPABASE_URL").startsWith("https://")
-  );
+  return Boolean(hasSupabaseAuthConfig() && isUsableEnv("SUPABASE_SERVICE_ROLE_KEY"));
 }
 
 export function hasOpenAIConfig() {
