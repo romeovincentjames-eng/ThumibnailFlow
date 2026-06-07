@@ -56,7 +56,7 @@ Creator direction and notes: ${input.notes || "None"}
 Transcript: ${input.transcript || "None"}
 
 Create:
-- 1 improved YouTube title under 72 characters
+- 1 improved YouTube title under 72 characters. This must be the strongest overall title choice
 - 5 title options under 72 characters each. Make the first title option exactly match improvedTitle
 - 1 improved YouTube description, 2 compact paragraphs
 - 5 to 8 hashtags

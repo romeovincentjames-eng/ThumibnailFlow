@@ -41,8 +41,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
           <span className="section-eyebrow">Pricing</span>
           <h1>Point packs for thumbnail production.</h1>
           <p>
-            Start with 20 trial points, then use monthly credits or top-ups to generate copy,
-            thumbnails, and YouTube publishing actions.
+            Start with 20 trial points, then use monthly credits or top-ups to generate title ideas,
+            copy, thumbnails, and YouTube publishing actions.
           </p>
           {checkoutState ? (
             <div className={checkoutState === "success" ? "notice-box" : "error-box"}>
@@ -101,7 +101,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                   <td>{POINT_COSTS.analyzeYouTubeLink} points</td>
                 </tr>
                 <tr>
-                  <td>Generate thumbnail prompt</td>
+                  <td>Generate title ideas and thumbnail prompt</td>
                   <td>{POINT_COSTS.thumbnailPrompt} points</td>
                 </tr>
                 <tr>

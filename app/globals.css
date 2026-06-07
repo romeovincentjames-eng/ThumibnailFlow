@@ -1699,13 +1699,20 @@ a {
   font-weight: 900;
 }
 
-.title-options-list strong {
+.title-option-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title-option-copy strong {
   color: var(--ink);
   font-size: 0.92rem;
   line-height: 1.25;
 }
 
-.title-options-list em {
+.title-option-copy em {
+  width: fit-content;
   padding: 5px 8px;
   border-radius: 999px;
   background: #ecfdf3;
@@ -1713,6 +1720,11 @@ a {
   font-size: 0.7rem;
   font-style: normal;
   font-weight: 900;
+}
+
+.selected-title-mark {
+  background: #ecfdf3;
+  color: #027948;
 }
 
 .prompt-box {
@@ -2002,6 +2014,16 @@ a {
   .video-row-fields,
   .thumbnail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .title-options-list li {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .title-options-list .compact-button,
+  .selected-title-mark {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .video-panel-header,

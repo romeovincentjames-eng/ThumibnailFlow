@@ -220,6 +220,33 @@ function VideoResult({
     }
   }
 
+  async function chooseTitle(title: string) {
+    setIsBusy(`title-${title}`);
+    setActionMessage(null);
+
+    try {
+      const response = await fetch(`/api/videos/${video.id}/title`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title })
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not choose this title.");
+      }
+
+      setActionMessage("Selected title updated for YouTube upload.");
+      await onRefresh();
+    } catch (caught) {
+      setActionMessage(caught instanceof Error ? caught.message : "Could not choose this title.");
+    } finally {
+      setIsBusy(null);
+    }
+  }
+
   return (
     <article className="video-panel">
       <div className="video-panel-header">
@@ -247,8 +274,23 @@ function VideoResult({
                 {titleOptions.map((title, index) => (
                   <li key={`${title}-${index}`}>
                     <span>{index + 1}</span>
-                    <strong>{title}</strong>
-                    {index === 0 ? <em>Primary</em> : null}
+                    <div className="title-option-copy">
+                      <strong>{title}</strong>
+                      {title === video.generatedTitle ? <em>Selected for YouTube</em> : index === 0 ? <em>AI pick</em> : null}
+                    </div>
+                    {title === video.generatedTitle ? (
+                      <span className="selected-title-mark">
+                        <Check aria-hidden="true" size={14} />
+                      </span>
+                    ) : (
+                      <button
+                        className="secondary-button compact-button"
+                        disabled={Boolean(isBusy)}
+                        onClick={() => chooseTitle(title)}
+                      >
+                        Use Title
+                      </button>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -294,7 +336,7 @@ function VideoResult({
                 onClick={applyToYouTube}
                 title={
                   youtubeConnected
-                    ? "Apply generated title, description, and best thumbnail to YouTube"
+                    ? "Apply selected title, description, and best thumbnail to YouTube"
                     : "Connect YouTube first"
                 }
               >
