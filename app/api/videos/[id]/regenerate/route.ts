@@ -19,11 +19,11 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     const video = access.video;
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found." }, { status: 404 });
+      return NextResponse.json({ error: "Thumbnail source not found." }, { status: 404 });
     }
 
     if (!access.authorized) {
-      return NextResponse.json({ error: "You do not have access to this video." }, { status: 403 });
+      return NextResponse.json({ error: "You do not have access to this thumbnail source." }, { status: 403 });
     }
 
     const batch = access.batch;
@@ -42,7 +42,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     if (account.pointsBalance < pointsRequired) {
       return NextResponse.json(
         {
-          error: `Regenerating this video needs ${pointsRequired} points. You have ${account.pointsBalance} points.`,
+          error: `Regenerating this thumbnail source needs ${pointsRequired} points. You have ${account.pointsBalance} points.`,
           pointsRequired,
           pointsBalance: account.pointsBalance
         },
@@ -79,11 +79,11 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ ok: true, pointsReserved: pointsRequired });
   } catch (error) {
     if (isInsufficientPointsError(error)) {
-      return NextResponse.json({ error: "You do not have enough points to regenerate this video." }, { status: 402 });
+      return NextResponse.json({ error: "You do not have enough points to regenerate this thumbnail source." }, { status: 402 });
     }
 
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not regenerate this video." },
+      { error: error instanceof Error ? error.message : "Could not regenerate this thumbnail source." },
       { status: 400 }
     );
   }

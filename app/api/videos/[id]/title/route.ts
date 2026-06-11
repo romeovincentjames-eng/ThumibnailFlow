@@ -14,11 +14,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const access = await getAuthorizedVideo(params.id);
 
   if (!access.video) {
-    return NextResponse.json({ error: "Video not found." }, { status: 404 });
+    return NextResponse.json({ error: "Thumbnail source not found." }, { status: 404 });
   }
 
   if (!access.authorized) {
-    return NextResponse.json({ error: "You do not have access to this video." }, { status: 403 });
+    return NextResponse.json({ error: "You do not have access to this thumbnail source." }, { status: 403 });
   }
 
   const body = await request.json().catch(() => null);

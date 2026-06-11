@@ -6,22 +6,22 @@ const features = [
   {
     icon: <UploadCloud size={22} />,
     title: "YouTube Links And Uploads",
-    text: "Batch up to 10 YouTube URLs or 10 uploaded videos, with manual metadata fields for uploaded files."
+    text: "Batch up to 10 YouTube URLs or uploaded source videos, with manual transcript, notes, and metadata fields."
   },
   {
     icon: <WandSparkles size={22} />,
     title: "Title Generator And Copy",
-    text: "Generate multiple clickable title ideas, a primary title, description, hashtags, and thumbnail prompt for each video."
+    text: "Generate multiple clickable title ideas, a primary title, description, hashtags, and thumbnail prompt for each source."
   },
   {
     icon: <Images size={22} />,
     title: "Multiple Concepts",
-    text: "Choose global thumbnail counts and override individual videos when one source needs more variations."
+    text: "Choose global thumbnail counts and override individual sources when one thumbnail needs more variations."
   },
   {
     icon: <RefreshCcw size={22} />,
     title: "Regeneration Controls",
-    text: "Regenerate a single image, one concept, or every concept for a video without restarting the whole batch."
+    text: "Regenerate a single thumbnail image, one concept, or every concept for a source without restarting the whole batch."
   },
   {
     icon: <Database size={22} />,

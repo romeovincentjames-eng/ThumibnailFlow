@@ -134,7 +134,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
               <h2>{batch?.project?.name ?? "Batch Results"}</h2>
               <p>
                 {batch
-                  ? `${batch.totalVideos} videos, ${batch.globalThumbnailCount} thumbnails per video, ${batch.selectedFormats.join(", ")}`
+                  ? `${batch.totalVideos} source${batch.totalVideos === 1 ? "" : "s"}, ${batch.globalThumbnailCount} thumbnail${batch.globalThumbnailCount === 1 ? "" : "s"} per source, ${batch.selectedFormats.join(", ")}`
                   : "Loading batch..."}
               </p>
             </div>
@@ -155,7 +155,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
             </div>
             <div className="progress-topline">
               <span>
-                {batch?.processedVideos ?? 0} of {batch?.totalVideos ?? 0} videos processed
+                {batch?.processedVideos ?? 0} of {batch?.totalVideos ?? 0} sources processed
               </span>
               <span>{batch?.selectedFormats.join(", ") ?? ""}</span>
             </div>
@@ -166,7 +166,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
               <div>
                 <h3>Generation needs attention</h3>
                 <p>
-                  This batch has queued or failed videos, or it has not saved all requested thumbnails yet.
+                  This batch has queued or failed sources, or it has not saved all requested thumbnail images yet.
                 </p>
               </div>
               <button className="primary-button" disabled={isProcessingBatch} onClick={runBatchProcessing}>
@@ -221,7 +221,7 @@ function VideoResult({
       : [];
   const sourceLabel =
     video.sourceType === "uploaded_video"
-      ? video.uploadedVideoName ?? video.title ?? "Uploaded video"
+      ? video.uploadedVideoName ?? video.title ?? "Uploaded source file"
       : video.sourceUrl ?? "YouTube link";
 
   async function runVideoAction(action: "save" | "regenerate" | "delete") {
@@ -303,7 +303,7 @@ function VideoResult({
     <article className="video-panel">
       <div className="video-panel-header">
         <div>
-          <h2>{video.generatedTitle ?? video.title ?? "Queued video"}</h2>
+          <h2>{video.generatedTitle ?? video.title ?? "Queued thumbnail source"}</h2>
           {video.sourceUrl ? (
             <a className="source-url" href={video.sourceUrl} target="_blank" rel="noreferrer">
               {sourceLabel}
@@ -347,13 +347,13 @@ function VideoResult({
                 ))}
               </ol>
             ) : (
-              <p>Title ideas will appear after metadata analysis.</p>
+              <p>Title ideas will appear after source and transcript analysis.</p>
             )}
           </div>
 
           <div className="copy-block">
             <h3>Generated Description</h3>
-            <p>{video.generatedDescription ?? video.description ?? "Waiting for analysis."}</p>
+            <p>{video.generatedDescription ?? video.description ?? "Waiting for source analysis."}</p>
           </div>
 
           <div className="copy-block">
@@ -369,7 +369,7 @@ function VideoResult({
 
           <div className="copy-block">
             <h3>Thumbnail Prompt</h3>
-            <pre className="prompt-box">{video.thumbnailPrompt ?? "Prompt will appear after metadata analysis."}</pre>
+            <pre className="prompt-box">{video.thumbnailPrompt ?? "Prompt will appear after source and transcript analysis."}</pre>
           </div>
 
           {video.errorMessage ? <div className="error-box">{video.errorMessage}</div> : null}
@@ -398,7 +398,7 @@ function VideoResult({
             ) : null}
             <button className="secondary-button" disabled={Boolean(isBusy)} onClick={() => runVideoAction("save")}>
               <Save aria-hidden="true" size={17} />
-              Save Video
+              Save Thumbnail Set
             </button>
             <button className="secondary-button" disabled={Boolean(isBusy)} onClick={() => runVideoAction("regenerate")}>
               <RefreshCcw aria-hidden="true" size={17} />
@@ -406,7 +406,7 @@ function VideoResult({
             </button>
             <button className="danger-button" disabled={Boolean(isBusy)} onClick={() => runVideoAction("delete")}>
               <Trash2 aria-hidden="true" size={17} />
-              Delete Video
+              Delete Source
             </button>
           </div>
         </div>
@@ -437,7 +437,7 @@ function VideoResult({
               </section>
             ))
           ) : (
-            <div className="empty-state">{isVideoRunning(video) ? "Generating thumbnails." : "No thumbnails yet."}</div>
+            <div className="empty-state">{isVideoRunning(video) ? "Generating thumbnail images." : "No thumbnails yet."}</div>
           )}
         </div>
       </div>

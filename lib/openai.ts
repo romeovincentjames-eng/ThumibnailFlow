@@ -44,7 +44,8 @@ export async function generateCreativePack(input: CreativeInput): Promise<Creati
   }
 
   const system = [
-    "You are ThumbnailFlow Batch, a video packaging strategist.",
+    "You are ThumbnailFlow Batch, a YouTube thumbnail and packaging strategist.",
+    "You create still thumbnail image concepts only; never create video files, animations, or motion sequences.",
     "Return only strict JSON with improvedTitle, titleOptions, improvedDescription, hashtags, and thumbnailPrompt.",
     "Make thumbnails highly clickable, readable, and honest to the video's topic."
   ].join(" ");
@@ -65,10 +66,12 @@ Create:
 - 1 detailed thumbnail prompt
 
 Thumbnail prompt requirements:
+- Use the transcript as primary topic context when it is provided
+- Describe one still YouTube thumbnail image, not a video, animation, or scene sequence
 - ${input.hasReferenceImage ? "Use the uploaded reference image only as style/layout inspiration" : "No reference image was uploaded, so create the thumbnail from the video topic and creator notes"}
 - ${input.hasReferenceImage ? "Do not copy pixel-for-pixel" : "Do not mention or depend on a missing reference image"}
 - If creator thumbnail direction is provided, honor it as the main visual direction unless it conflicts with the video topic
-- Create a new original thumbnail for this video's topic
+- Create a new original thumbnail for this source topic
 - Prioritize bold readable text, clear focal subject, contrast, and emotional curiosity
 `;
 
@@ -174,7 +177,7 @@ function buildImagePrompt(input: ThumbnailInput) {
       ].join("\n");
 
   return `
-Create concept ${input.conceptNumber} of ${input.conceptCount} as a new original video thumbnail for:
+Create concept ${input.conceptNumber} of ${input.conceptCount} as a new original still YouTube thumbnail image for:
 Title: ${input.creative.improvedTitle}
 Topic context: ${input.metadata.description || input.metadata.title}
 Format: ${input.format}, final crop ${dimensions.width}x${dimensions.height}
@@ -187,7 +190,8 @@ ${conceptDirection}
 
 ${referenceBehavior}
 - Use bold readable thumbnail text only when it improves clickability
-- High contrast, clean focal hierarchy, mobile-readable, no watermarks
+- High contrast, clean focal hierarchy, mobile-readable
+- Do not create a video file, animation, filmstrip, playback controls, fake player UI, or watermark
 `;
 }
 
@@ -289,42 +293,4 @@ function fallbackCreativePack(input: CreativeInput): CreativePack {
         : "No reference image was uploaded, so create an original layout from the topic."
     ].join(" ")
   };
-}
-
-function generateSvgPlaceholder(input: ThumbnailInput) {
-  const { width, height } = FORMAT_DIMENSIONS[input.format];
-  const safeTitle = escapeXml(input.creative.improvedTitle).slice(0, 90);
-  const label = escapeXml(`${input.format} / concept ${input.conceptNumber}`);
-  const fontSize = Math.max(46, Math.floor(width / 16));
-  const subSize = Math.max(24, Math.floor(width / 38));
-
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1f5ed6"/>
-      <stop offset="0.54" stop-color="#07936b"/>
-      <stop offset="1" stop-color="#ff7a35"/>
-    </linearGradient>
-  </defs>
-  <rect width="${width}" height="${height}" fill="url(#bg)"/>
-  <rect x="${Math.floor(width * 0.05)}" y="${Math.floor(height * 0.08)}" width="${Math.floor(width * 0.9)}" height="${Math.floor(height * 0.84)}" rx="36" fill="rgba(17,24,39,0.42)" stroke="rgba(255,255,255,0.42)" stroke-width="6"/>
-  <text x="${Math.floor(width * 0.08)}" y="${Math.floor(height * 0.22)}" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="${subSize}" font-weight="800">THUMBNAILFLOW ${label}</text>
-  <foreignObject x="${Math.floor(width * 0.08)}" y="${Math.floor(height * 0.3)}" width="${Math.floor(width * 0.66)}" height="${Math.floor(height * 0.48)}">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,Helvetica,sans-serif;color:white;font-size:${fontSize}px;font-weight:900;line-height:0.96;text-transform:uppercase;overflow-wrap:anywhere;">${safeTitle}</div>
-  </foreignObject>
-  <circle cx="${Math.floor(width * 0.84)}" cy="${Math.floor(height * 0.55)}" r="${Math.floor(Math.min(width, height) * 0.16)}" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.72)" stroke-width="8"/>
-  <path d="M ${Math.floor(width * 0.81)} ${Math.floor(height * 0.46)} L ${Math.floor(width * 0.81)} ${Math.floor(height * 0.64)} L ${Math.floor(width * 0.91)} ${Math.floor(height * 0.55)} Z" fill="#ffffff"/>
-</svg>`;
-
-  return Buffer.from(svg);
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }

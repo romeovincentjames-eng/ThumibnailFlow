@@ -80,7 +80,7 @@ export async function processConceptByVideoId(
 
     const thumbnailCount = getThumbnailCount(video, batch);
     if (conceptNumber < 1 || conceptNumber > thumbnailCount) {
-      throw new Error(`Concept ${conceptNumber} is outside this video's thumbnail count.`);
+      throw new Error(`Concept ${conceptNumber} is outside this source's thumbnail count.`);
     }
 
     await repository.deleteThumbnailsForConcept(video.id, conceptNumber);
@@ -244,8 +244,8 @@ async function processVideo(video: Video, batch: BatchJob, reservation?: PointRe
       errorMessage: null
     });
   } catch (error) {
-    const errorMessage = getErrorMessage(error, "Video processing failed.");
-    console.error("Video processing failed", {
+    const errorMessage = getErrorMessage(error, "Thumbnail source processing failed.");
+    console.error("Thumbnail source processing failed", {
       videoId: video.id,
       batchId: batch.id,
       error: errorMessage

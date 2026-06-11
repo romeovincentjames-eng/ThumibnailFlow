@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           error:
             sourceType === "youtube_link"
               ? "Add at least one YouTube URL."
-              : "Upload at least one video file."
+              : "Upload at least one source video file."
         },
         { status: 400 }
       );
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (sourceCount > MAX_VIDEOS_PER_BATCH) {
       return NextResponse.json(
-        { error: `ThumbnailFlow Batch supports up to ${MAX_VIDEOS_PER_BATCH} videos at once.` },
+        { error: `ThumbnailFlow Batch supports up to ${MAX_VIDEOS_PER_BATCH} sources at once.` },
         { status: 400 }
       );
     }
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (totalImagesRequested > MAX_IMAGES_PER_BATCH) {
       return NextResponse.json(
         {
-          error: `This batch would generate ${totalImagesRequested} images. Reduce videos, thumbnail count, or formats to stay at ${MAX_IMAGES_PER_BATCH} images or fewer.`
+          error: `This batch would generate ${totalImagesRequested} images. Reduce sources, thumbnail count, or formats to stay at ${MAX_IMAGES_PER_BATCH} images or fewer.`
         },
         { status: 400 }
       );

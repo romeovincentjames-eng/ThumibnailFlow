@@ -25,11 +25,11 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     const access = await getAuthorizedVideo(params.id);
     const video = access.video;
     if (!video) {
-      return NextResponse.json({ error: "Video not found." }, { status: 404 });
+      return NextResponse.json({ error: "Thumbnail source not found." }, { status: 404 });
     }
 
     if (!access.authorized) {
-      return NextResponse.json({ error: "You do not have access to this video." }, { status: 403 });
+      return NextResponse.json({ error: "You do not have access to this thumbnail source." }, { status: 403 });
     }
 
     const batch = access.batch;
@@ -39,7 +39,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
 
     const thumbnailCount = video.perVideoThumbnailCount ?? batch.globalThumbnailCount;
     if (conceptNumber > thumbnailCount) {
-      return NextResponse.json({ error: "That concept does not exist for this video." }, { status: 400 });
+      return NextResponse.json({ error: "That concept does not exist for this thumbnail source." }, { status: 400 });
     }
 
     const account = access.account;

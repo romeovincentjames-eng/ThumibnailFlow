@@ -96,8 +96,8 @@ export function BatchCreator() {
   );
   const mixedCounts = rowIndexes.some((index) => getOverrideCount(index) !== null);
   const estimateText = mixedCounts
-    ? `${videoCount} videos × mixed thumbnail counts × ${formats.length} formats = ${totalImages} images`
-    : `${videoCount} videos × ${globalThumbnailCount} thumbnails × ${formats.length} formats = ${totalImages} images`;
+    ? `${videoCount} source${videoCount === 1 ? "" : "s"} × mixed thumbnail counts × ${formats.length} formats = ${totalImages} images`
+    : `${videoCount} source${videoCount === 1 ? "" : "s"} × ${globalThumbnailCount} thumbnails × ${formats.length} formats = ${totalImages} images`;
   const estimateError =
     totalImages > MAX_IMAGES_PER_BATCH
       ? `This batch would generate ${totalImages} images. Reduce thumbnails or formats to stay at ${MAX_IMAGES_PER_BATCH} or fewer.`
@@ -272,7 +272,7 @@ export function BatchCreator() {
           <aside className="generator-hero-card" aria-label="Batch preview">
             <div className="hero-card-topline">
               <span>Run Preview</span>
-              <strong>{videoCount}/10 videos</strong>
+              <strong>{videoCount}/10 sources</strong>
             </div>
             <div className="thumbnail-preview thumbnail-preview-elevated" aria-hidden="true">
               <span>BATCH THUMBNAILS THAT CLICK</span>
@@ -302,7 +302,7 @@ export function BatchCreator() {
               <span className="section-eyebrow">Generator</span>
               <h2>Batch setup</h2>
             </div>
-            <span className="counter-pill">{videoCount}/10 videos</span>
+            <span className="counter-pill">{videoCount}/10 sources</span>
           </div>
 
           <div className="batch-grid generator-grid">
@@ -310,7 +310,7 @@ export function BatchCreator() {
               <div className="panel-heading generator-panel-heading">
               <div>
                 <h2>Batch Setup</h2>
-                <p>Build a batch from links or uploads, then generate every concept and crop.</p>
+                <p>Analyze YouTube links, transcripts, or uploaded source files, then generate thumbnail image concepts and crops.</p>
               </div>
               <Sparkles aria-hidden="true" size={22} />
             </div>
@@ -329,7 +329,7 @@ export function BatchCreator() {
               <section className="step-block">
                 <div className="step-heading">
                   <span>Step 1</span>
-                  <h2>Add YouTube links or upload videos</h2>
+                  <h2>Add YouTube links or source files</h2>
                 </div>
                 <div className="source-toggle" role="group" aria-label="Source type">
                   <button
@@ -346,7 +346,7 @@ export function BatchCreator() {
                     onClick={() => setSourceType("uploaded_video")}
                   >
                     <Film aria-hidden="true" size={17} />
-                    Upload Videos
+                    Upload Source Files
                   </button>
                 </div>
 
@@ -369,7 +369,7 @@ export function BatchCreator() {
                 ) : (
                   <div className="file-zone">
                     <span className="field-label">
-                      <UploadCloud aria-hidden="true" size={16} /> Uploaded videos
+                      <UploadCloud aria-hidden="true" size={16} /> Uploaded source files
                     </span>
                     <input
                       type="file"
@@ -380,7 +380,7 @@ export function BatchCreator() {
                     <span className="field-hint">
                       {uploadedVideos.length
                         ? `${uploadedVideos.length} selected${extraCount ? `, remove ${extraCount} to stay under 10` : ""}.`
-                        : "Choose up to 10 video files."}
+                        : "Choose up to 10 video files to analyze as source context. The app generates thumbnail images only."}
                     </span>
                   </div>
                 )}
@@ -416,7 +416,7 @@ export function BatchCreator() {
                     placeholder="Example: bold face on the left, short yellow headline, dramatic contrast, clean background"
                   />
                   <span className="field-hint">
-                    Applies to every video unless you add a different direction in the video details.
+                    Applies to every source unless you add a different direction in the source details.
                   </span>
                 </div>
               </section>
@@ -424,10 +424,10 @@ export function BatchCreator() {
               <section className="step-block">
                 <div className="step-heading">
                   <span>Step 3</span>
-                  <h2>Choose thumbnails per video</h2>
+                  <h2>Choose thumbnails per source</h2>
                 </div>
                 <div className="field">
-                  <label htmlFor="globalThumbnailCount">Thumbnails per video</label>
+                  <label htmlFor="globalThumbnailCount">Thumbnails per source</label>
                   <select
                     id="globalThumbnailCount"
                     className="text-input"
@@ -438,7 +438,7 @@ export function BatchCreator() {
                   >
                     {THUMBNAIL_COUNT_OPTIONS.map((count) => (
                       <option key={count} value={count}>
-                        {count} thumbnail{count === 1 ? "" : "s"} per video
+                        {count} thumbnail{count === 1 ? "" : "s"} per source
                       </option>
                     ))}
                   </select>
@@ -480,7 +480,7 @@ export function BatchCreator() {
               <section className="step-block">
                 <div className="step-heading">
                   <span>Step 6</span>
-                  <h2>Review video details</h2>
+                  <h2>Review source details</h2>
                 </div>
                 <div className="video-input-list">
                   {videoCount ? (
@@ -499,7 +499,7 @@ export function BatchCreator() {
                         <div className="video-row-fields">
                           <div className="file-zone">
                             <span className="field-label">
-                              <ImagePlus aria-hidden="true" size={16} /> Per-video reference optional
+                              <ImagePlus aria-hidden="true" size={16} /> Per-source reference optional
                             </span>
                             <input
                               type="file"
@@ -511,7 +511,7 @@ export function BatchCreator() {
                                 }))
                               }
                             />
-                            <span className="field-hint">Overrides the global reference only for this video.</span>
+                            <span className="field-hint">Overrides the global reference only for this source.</span>
                           </div>
                           <div className="field">
                             <label htmlFor={`thumbnailCount-${index}`}>Thumbnail count override</label>
@@ -539,7 +539,7 @@ export function BatchCreator() {
                         {sourceType === "uploaded_video" ? (
                           <div className="video-row-fields">
                             <div className="field">
-                              <label htmlFor={`title-${index}`}>Video title</label>
+                              <label htmlFor={`title-${index}`}>Source video title</label>
                               <input
                                 id={`title-${index}`}
                                 className="text-input"
@@ -550,7 +550,7 @@ export function BatchCreator() {
                               />
                             </div>
                             <div className="field">
-                              <label htmlFor={`description-${index}`}>Video description</label>
+                              <label htmlFor={`description-${index}`}>Source video description</label>
                               <textarea
                                 id={`description-${index}`}
                                 className="text-area compact"
@@ -561,7 +561,7 @@ export function BatchCreator() {
                                     [index]: event.target.value
                                   }))
                                 }
-                                placeholder="What is this video about?"
+                                placeholder="What is this source about?"
                               />
                             </div>
                           </div>
@@ -580,7 +580,7 @@ export function BatchCreator() {
                                   [index]: event.target.value
                                 }))
                               }
-                              placeholder="Describe the thumbnail style, subject, text, mood, colors, or layout for this video"
+                              placeholder="Describe the thumbnail style, subject, text, mood, colors, or layout for this source"
                             />
                             <span className="field-hint">
                               Leave blank to use the global direction or let the AI choose.
@@ -618,14 +618,14 @@ export function BatchCreator() {
                     ))
                   ) : (
                     <div className="empty-state">
-                      {sourceType === "youtube_link" ? "Add at least one YouTube URL." : "Upload at least one video."}
+                      {sourceType === "youtube_link" ? "Add at least one YouTube URL." : "Upload at least one source file."}
                     </div>
                   )}
                 </div>
               </section>
 
               {tooManySources ? (
-                <div className="error-box">Keep the batch to {MAX_VIDEOS_PER_BATCH} videos or fewer.</div>
+                <div className="error-box">Keep the batch to {MAX_VIDEOS_PER_BATCH} sources or fewer.</div>
               ) : null}
               {estimateError ? <div className="error-box">{estimateError}</div> : null}
               {billingError ? <div className="error-box">{billingError}</div> : null}
@@ -665,7 +665,7 @@ export function BatchCreator() {
               <div className="side-stat-grid">
                 <div className="side-stat">
                   <strong>{videoCount}</strong>
-                  <span>Videos</span>
+                  <span>Sources</span>
                 </div>
                 <div className="side-stat">
                   <strong>{globalThumbnailCount}</strong>
@@ -741,7 +741,7 @@ async function getBatchSubmitError(caught: unknown) {
     if (response.ok) {
       return [
         "The batch upload was interrupted before the server could answer.",
-        "Refresh the page and try again. If you uploaded a large file, try a smaller PNG/JPG reference image or a shorter video file."
+        "Refresh the page and try again. If you uploaded a large file, try a smaller PNG/JPG reference image or a shorter source video file."
       ].join(" ");
     }
   } catch {

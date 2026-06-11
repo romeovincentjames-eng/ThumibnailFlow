@@ -22,11 +22,11 @@ export async function POST(_request: Request, { params }: { params: { id: string
     const video = access.video;
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found." }, { status: 404 });
+      return NextResponse.json({ error: "Thumbnail source not found." }, { status: 404 });
     }
 
     if (!access.authorized) {
-      return NextResponse.json({ error: "You do not have access to this video." }, { status: 403 });
+      return NextResponse.json({ error: "You do not have access to this thumbnail source." }, { status: 403 });
     }
 
     if (video.sourceType !== "youtube_link") {
@@ -109,7 +109,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
     }
 
     if (isInsufficientPointsError(error)) {
-      return NextResponse.json({ error: "You do not have enough points to apply this video." }, { status: 402 });
+      return NextResponse.json({ error: "You do not have enough points to apply this source to YouTube." }, { status: 402 });
     }
 
     return NextResponse.json(
