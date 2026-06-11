@@ -25,11 +25,15 @@ type YouTubeStatus = {
   connected: boolean;
   expiresAt: number | null;
   scope: string;
+  redirectUri: string;
+  missingKeys: string[];
 };
 
 export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
   const [batch, setBatch] = useState<BatchWithVideos | null>(initialBatch);
   const [error, setError] = useState<string | null>(null);
+  const [processMessage, setProcessMessage] = useState<string | null>(null);
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [youtubeStatus, setYouTubeStatus] = useState<YouTubeStatus | null>(null);
 
   const isRunning = useMemo(() => {
@@ -74,6 +78,38 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
   const requestedImages = batch?.totalImagesRequested ?? 0;
   const completedImages = batch?.totalImagesCompleted ?? 0;
   const progress = requestedImages ? Math.round((completedImages / requestedImages) * 100) : 0;
+  const needsGeneration = Boolean(
+    batch &&
+      (batch.totalImagesCompleted < batch.totalImagesRequested ||
+        batch.videos.some((video) => video.status === "queued" || video.status === "failed"))
+  );
+
+  async function runBatchProcessing() {
+    setIsProcessingBatch(true);
+    setProcessMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/batches/${batchId}/process`, { method: "POST" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Could not run generation for this batch.");
+      }
+
+      if (result.batch) {
+        setBatch(result.batch);
+      } else {
+        await refreshBatch(batchId, setBatch, setError);
+      }
+
+      setProcessMessage("Generation ran again. Check each video below for thumbnails or any specific error.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not run generation for this batch.");
+    } finally {
+      setIsProcessingBatch(false);
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -125,6 +161,22 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
             </div>
           </div>
 
+          {needsGeneration ? (
+            <div className="batch-recovery-card">
+              <div>
+                <h3>Generation needs attention</h3>
+                <p>
+                  This batch has queued or failed videos, or it has not saved all requested thumbnails yet.
+                </p>
+              </div>
+              <button className="primary-button" disabled={isProcessingBatch} onClick={runBatchProcessing}>
+                <RefreshCcw aria-hidden="true" size={17} />
+                {isProcessingBatch ? "Running generation" : "Run generation now"}
+              </button>
+            </div>
+          ) : null}
+
+          {processMessage ? <div className="notice-box">{processMessage}</div> : null}
           {error ? <div className="error-box">{error}</div> : null}
 
           <div className="results-list">
@@ -425,15 +477,31 @@ function YouTubeConnection({
         <div>
           <h2>YouTube Publishing</h2>
           <p>
-            {status?.connected
+            {!status?.configured
+              ? "Add the Google OAuth keys to enable YouTube connection and publishing."
+              : status.connected
               ? "Connected. You can apply generated titles, descriptions, and thumbnails to source videos."
               : "Connect YouTube to publish generated title, description, and thumbnail updates."}
           </p>
+          {!status?.configured ? (
+            <div className="youtube-setup-panel">
+              <strong>Required Vercel environment variables</strong>
+              <code>GOOGLE_CLIENT_ID</code>
+              <code>GOOGLE_CLIENT_SECRET</code>
+              <code>YOUTUBE_REDIRECT_URI={status?.redirectUri || "https://thumibnail-flow.vercel.app/api/youtube/oauth/callback"}</code>
+              <span>
+                Add this redirect URL to your Google OAuth Web Client, then redeploy Vercel. The Connect
+                YouTube button will appear here after the keys are live.
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="button-row">
         {!status?.configured ? (
-          <span className="status-pill" data-status="failed">Google keys missing</span>
+          <span className="status-pill" data-status="failed">
+            {(status?.missingKeys?.length ? status.missingKeys.join(", ") : "Google keys")} missing
+          </span>
         ) : status.connected ? (
           <>
             <span className="status-pill" data-status="completed">Connected</span>
@@ -555,7 +623,7 @@ async function refreshYouTubeStatus(setStatus: (status: YouTubeStatus) => void) 
     const result = await response.json();
     setStatus(result);
   } catch {
-    setStatus({ configured: false, connected: false, expiresAt: null, scope: "" });
+    setStatus({ configured: false, connected: false, expiresAt: null, scope: "", redirectUri: "", missingKeys: [] });
   }
 }
 

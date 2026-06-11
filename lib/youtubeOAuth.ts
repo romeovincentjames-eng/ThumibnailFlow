@@ -33,11 +33,18 @@ type OAuthState = {
 
 export function getYouTubeOAuthStatus() {
   const tokens = readYouTubeTokens();
+  const missingKeys = [
+    getEnv("GOOGLE_CLIENT_ID") ? null : "GOOGLE_CLIENT_ID",
+    getEnv("GOOGLE_CLIENT_SECRET") ? null : "GOOGLE_CLIENT_SECRET"
+  ].filter((key): key is string => Boolean(key));
+
   return {
     configured: hasYouTubeOAuthConfig(),
     connected: Boolean(tokens?.accessToken || tokens?.refreshToken),
     expiresAt: tokens?.expiresAt ?? null,
-    scope: tokens?.scope ?? YOUTUBE_OAUTH_SCOPES.join(" ")
+    scope: tokens?.scope ?? YOUTUBE_OAUTH_SCOPES.join(" "),
+    redirectUri: getYouTubeRedirectUri(),
+    missingKeys
   };
 }
 

@@ -1155,6 +1155,31 @@ a {
   line-height: 1.45;
 }
 
+.youtube-setup-panel {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.youtube-setup-panel strong {
+  color: var(--text);
+}
+
+.youtube-setup-panel code {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
 .youtube-icon {
   color: #ff0033;
   border-color: rgba(255, 0, 51, 0.18);
@@ -1609,6 +1634,30 @@ a {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--accent), var(--good));
   transition: width 0.3s ease;
+}
+
+.batch-recovery-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(217, 119, 6, 0.26);
+  border-radius: 10px;
+  background: rgba(255, 251, 235, 0.82);
+}
+
+.batch-recovery-card h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.batch-recovery-card p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .results-list {

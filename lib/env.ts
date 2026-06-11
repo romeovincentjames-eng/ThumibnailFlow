@@ -37,7 +37,13 @@ export function hasStripeConfig() {
 }
 
 export function getYouTubeRedirectUri() {
-  return getEnv("YOUTUBE_REDIRECT_URI") || "http://localhost:3000/api/youtube/oauth/callback";
+  const configuredRedirect = getEnv("YOUTUBE_REDIRECT_URI");
+  if (configuredRedirect) return configuredRedirect;
+
+  const appUrl = getEnv("NEXT_PUBLIC_APP_URL").replace(/\/$/, "");
+  if (appUrl) return `${appUrl}/api/youtube/oauth/callback`;
+
+  return "http://localhost:3000/api/youtube/oauth/callback";
 }
 
 export function shouldUseInngest() {

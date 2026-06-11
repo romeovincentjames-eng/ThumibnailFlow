@@ -244,14 +244,31 @@ async function processVideo(video: Video, batch: BatchJob, reservation?: PointRe
       errorMessage: null
     });
   } catch (error) {
+    const errorMessage = getErrorMessage(error, "Video processing failed.");
+    console.error("Video processing failed", {
+      videoId: video.id,
+      batchId: batch.id,
+      error: errorMessage
+    });
+
     await repository.updateVideo(video.id, {
       status: "failed",
       statusDetail: "Failed",
-      errorMessage: error instanceof Error ? error.message : "Video processing failed."
+      errorMessage
     });
 
     await refundUnusedVideoPoints(video.id, reservation);
   }
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "").trim();
+    if (message) return message;
+  }
+  if (typeof error === "string" && error.trim()) return error.trim();
+  return fallback;
 }
 
 async function createThumbnailForFormat(input: {

@@ -253,6 +253,10 @@ function sortThumbnails(thumbnails: Thumbnail[]) {
   });
 }
 
+function isMissingGeneratedTitleOptionsColumn(error: { message?: string; code?: string }) {
+  return /generated_title_options|schema cache|column/i.test(error.message ?? "") || error.code === "PGRST204";
+}
+
 class Repository {
   async createBillingAccount(input?: { userId?: string | null; email?: string | null }) {
     const supabase = getSupabaseAdmin();
@@ -771,7 +775,17 @@ class Repository {
     const supabase = getSupabaseAdmin();
 
     if (supabase) {
-      const { error } = await supabase.from("videos").update(toSnakePatch(patch)).eq("id", videoId);
+      const mappedPatch = toSnakePatch(patch);
+      const { error } = await supabase.from("videos").update(mappedPatch).eq("id", videoId);
+
+      if (error && isMissingGeneratedTitleOptionsColumn(error) && "generated_title_options" in mappedPatch) {
+        const compatiblePatch = { ...mappedPatch };
+        delete compatiblePatch.generated_title_options;
+        const retry = await supabase.from("videos").update(compatiblePatch).eq("id", videoId);
+        if (retry.error) throw retry.error;
+        return;
+      }
+
       if (error) throw error;
       return;
     }
