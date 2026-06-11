@@ -103,7 +103,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
         await refreshBatch(batchId, setBatch, setError);
       }
 
-      setProcessMessage("Generation ran again. Check each video below for thumbnails or any specific error.");
+      setProcessMessage("Generation ran again. Check each source below for thumbnails or any specific error.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not run generation for this batch.");
     } finally {
