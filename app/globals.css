@@ -1795,6 +1795,28 @@ a {
   gap: 7px;
 }
 
+.output-choice-panel {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.output-choice-panel strong {
+  color: #172554;
+  font-size: 0.88rem;
+}
+
+.output-choice-panel span {
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
 .thumbnail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1893,6 +1915,10 @@ a {
   padding: 0 9px;
   font-size: 0.76rem;
   line-height: 1.1;
+}
+
+.thumbnail-upload-button {
+  grid-column: 1 / -1;
 }
 
 .thumbnail-action-message {

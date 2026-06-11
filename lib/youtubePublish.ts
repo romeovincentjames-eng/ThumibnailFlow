@@ -24,6 +24,7 @@ export type YouTubeApplyResult = {
 export async function applyVideoToYouTube(input: {
   video: VideoWithThumbnails;
   accessToken: string;
+  thumbnailId?: string | null;
 }) {
   const youtubeVideoId = input.video.sourceUrl ? extractVideoId(input.video.sourceUrl) : null;
 
@@ -44,7 +45,7 @@ export async function applyVideoToYouTube(input: {
     description: withHashtags(input.video.generatedDescription, input.video.hashtags)
   });
 
-  const thumbnail = chooseYouTubeThumbnail(input.video.thumbnails);
+  const thumbnail = chooseYouTubeThumbnail(input.video.thumbnails, input.thumbnailId ?? null);
   let thumbnailUpdated = false;
   let thumbnailFormat: string | null = null;
 
@@ -171,7 +172,17 @@ async function uploadYouTubeThumbnail(input: {
   }
 }
 
-function chooseYouTubeThumbnail(thumbnails: Thumbnail[]) {
+function chooseYouTubeThumbnail(thumbnails: Thumbnail[], selectedThumbnailId?: string | null) {
+  if (selectedThumbnailId) {
+    const selected = thumbnails.find(
+      (thumbnail) => thumbnail.id === selectedThumbnailId && thumbnail.status === "generated"
+    );
+
+    if (selected) {
+      return selected;
+    }
+  }
+
   return (
     thumbnails.find((thumbnail) => thumbnail.format === "16:9" && thumbnail.status === "generated") ??
     thumbnails.find((thumbnail) => thumbnail.status === "generated") ??

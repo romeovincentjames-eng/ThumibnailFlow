@@ -7,7 +7,7 @@ import { getValidYouTubeTokens, setYouTubeTokenCookie } from "@/lib/youtubeOAuth
 
 export const runtime = "nodejs";
 
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   let reservation:
     | {
         accountId: string;
@@ -44,6 +44,19 @@ export async function POST(_request: Request, { params }: { params: { id: string
     }
 
     const account = access.account;
+    const body = await request.json().catch(() => null);
+    const selectedThumbnailId = typeof body?.thumbnailId === "string" ? body.thumbnailId.trim() : "";
+
+    if (selectedThumbnailId) {
+      const selectedThumbnail = videoWithThumbnails.thumbnails.find((thumbnail) => thumbnail.id === selectedThumbnailId);
+
+      if (!selectedThumbnail || selectedThumbnail.status !== "generated") {
+        return NextResponse.json(
+          { error: "Choose one generated thumbnail photo before uploading to YouTube." },
+          { status: 400 }
+        );
+      }
+    }
 
     if (account.pointsBalance < POINT_COSTS.youtubeApply) {
       return NextResponse.json(
@@ -76,7 +89,8 @@ export async function POST(_request: Request, { params }: { params: { id: string
     const { tokens, refreshed } = await getValidYouTubeTokens();
     const result = await applyVideoToYouTube({
       video: videoWithThumbnails,
-      accessToken: tokens.accessToken
+      accessToken: tokens.accessToken,
+      thumbnailId: selectedThumbnailId || null
     });
 
     await repository.updateVideo(video.id, {

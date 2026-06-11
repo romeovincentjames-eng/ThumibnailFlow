@@ -237,12 +237,18 @@ function VideoResult({
     }
   }
 
-  async function applyToYouTube() {
+  async function applyToYouTube(thumbnailId?: string) {
     setIsBusy("youtube");
     setActionMessage(null);
 
     try {
-      const response = await fetch(`/api/videos/${video.id}/youtube/apply`, { method: "POST" });
+      const response = await fetch(`/api/videos/${video.id}/youtube/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(thumbnailId ? { thumbnailId } : {})
+      });
       const result = await response.json();
 
       if (!response.ok) {
@@ -251,7 +257,7 @@ function VideoResult({
 
       setActionMessage(
         result.result?.thumbnailUpdated
-          ? "Applied title, description, and thumbnail to YouTube."
+          ? "Uploaded the selected thumbnail photo to YouTube with the generated title and description."
           : "Applied title and description to YouTube."
       );
       await onRefresh();
@@ -375,27 +381,14 @@ function VideoResult({
           {video.errorMessage ? <div className="error-box">{video.errorMessage}</div> : null}
           {actionMessage ? <div className="notice-box">{actionMessage}</div> : null}
 
+          <div className="output-choice-panel">
+            <strong>Pictures first</strong>
+            <span>
+              Save or download the generated photos here. Uploading one to YouTube is optional and only happens after you click an upload button.
+            </span>
+          </div>
+
           <div className="button-row">
-            {video.sourceType === "youtube_link" ? (
-              <button
-                className="primary-button"
-                disabled={
-                  Boolean(isBusy) ||
-                  !youtubeConnected ||
-                  !video.generatedTitle ||
-                  !video.generatedDescription
-                }
-                onClick={applyToYouTube}
-                title={
-                  youtubeConnected
-                    ? "Apply selected title, description, and best thumbnail to YouTube"
-                    : "Connect YouTube first"
-                }
-              >
-                <Youtube aria-hidden="true" size={17} />
-                Apply to YouTube
-              </button>
-            ) : null}
             <button className="secondary-button" disabled={Boolean(isBusy)} onClick={() => runVideoAction("save")}>
               <Save aria-hidden="true" size={17} />
               Save Thumbnail Set
@@ -428,7 +421,19 @@ function VideoResult({
                 </div>
                 <div className="thumbnail-grid">
                   {concept.thumbnails.map((thumbnail) => (
-                    <ThumbnailFrame key={thumbnail.id} thumbnail={thumbnail} onRefresh={onRefresh} />
+                    <ThumbnailFrame
+                      key={thumbnail.id}
+                      thumbnail={thumbnail}
+                      canUploadToYouTube={
+                        video.sourceType === "youtube_link" &&
+                        youtubeConnected &&
+                        Boolean(video.generatedTitle) &&
+                        Boolean(video.generatedDescription)
+                      }
+                      isUploadingToYouTube={isBusy === "youtube"}
+                      onUploadToYouTube={() => applyToYouTube(thumbnail.id)}
+                      onRefresh={onRefresh}
+                    />
                   ))}
                   {selectedFormats.length > concept.thumbnails.length ? (
                     <div className="empty-state">Waiting for remaining formats.</div>
@@ -478,10 +483,10 @@ function YouTubeConnection({
           <h2>YouTube Publishing</h2>
           <p>
             {!status?.configured
-              ? "Add the Google OAuth keys to enable YouTube connection and publishing."
+              ? "Optional: add Google OAuth keys only if you want to upload a chosen thumbnail to YouTube."
               : status.connected
-              ? "Connected. You can apply generated titles, descriptions, and thumbnails to source videos."
-              : "Connect YouTube to publish generated title, description, and thumbnail updates."}
+              ? "Connected. Save or download pictures freely, or upload one chosen thumbnail to YouTube."
+              : "Optional: connect YouTube only when you want to upload a generated thumbnail to a source video."}
           </p>
           {!status?.configured ? (
             <div className="youtube-setup-panel">
@@ -522,9 +527,15 @@ function YouTubeConnection({
 
 function ThumbnailFrame({
   thumbnail,
+  canUploadToYouTube,
+  isUploadingToYouTube,
+  onUploadToYouTube,
   onRefresh
 }: {
   thumbnail: Thumbnail;
+  canUploadToYouTube: boolean;
+  isUploadingToYouTube: boolean;
+  onUploadToYouTube: () => Promise<void>;
   onRefresh: () => Promise<void>;
 }) {
   const [isBusy, setIsBusy] = useState<string | null>(null);
@@ -615,6 +626,16 @@ function ThumbnailFrame({
         >
           <Trash2 aria-hidden="true" size={15} />
           Delete
+        </button>
+        <button
+          className="primary-button thumbnail-action-button thumbnail-upload-button"
+          disabled={Boolean(isBusy) || isUploadingToYouTube || !canUploadToYouTube}
+          title={canUploadToYouTube ? "Upload this photo to YouTube" : "Connect YouTube and generate copy first"}
+          aria-label="Upload this photo to YouTube"
+          onClick={onUploadToYouTube}
+        >
+          <Youtube aria-hidden="true" size={15} />
+          Upload This Photo to YouTube
         </button>
       </div>
       {actionMessage ? <div className="thumbnail-action-message">{actionMessage}</div> : null}
