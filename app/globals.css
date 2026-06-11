@@ -1876,8 +1876,8 @@ a {
 }
 
 .thumbnail-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -1885,6 +1885,20 @@ a {
   width: 34px;
   min-height: 34px;
   padding: 0;
+}
+
+.thumbnail-action-button {
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 9px;
+  font-size: 0.76rem;
+  line-height: 1.1;
+}
+
+.thumbnail-action-message {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .compact-button {

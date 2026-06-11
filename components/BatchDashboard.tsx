@@ -528,15 +528,31 @@ function ThumbnailFrame({
   onRefresh: () => Promise<void>;
 }) {
   const [isBusy, setIsBusy] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   async function runThumbnailAction(action: "save" | "regenerate" | "delete") {
     setIsBusy(action);
+    setActionMessage(null);
     const method = action === "delete" ? "DELETE" : "POST";
     const url = action === "delete" ? `/api/thumbnails/${thumbnail.id}` : `/api/thumbnails/${thumbnail.id}/${action}`;
 
     try {
-      await fetch(url, { method });
+      const response = await fetch(url, { method });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error ?? `Could not ${action} this thumbnail.`);
+      }
+
+      if (action === "save") {
+        setActionMessage("Photo saved.");
+      } else if (action === "regenerate") {
+        setActionMessage("Regeneration started.");
+      }
+
       await onRefresh();
+    } catch (caught) {
+      setActionMessage(caught instanceof Error ? caught.message : `Could not ${action} this thumbnail.`);
     } finally {
       setIsBusy(null);
     }
@@ -561,42 +577,47 @@ function ThumbnailFrame({
       </figcaption>
       <div className="thumbnail-actions">
         <button
-          className="secondary-button icon-button"
+          className="secondary-button thumbnail-action-button"
           disabled={Boolean(isBusy)}
           title={thumbnail.saved ? "Saved" : "Save"}
           aria-label={thumbnail.saved ? "Saved" : "Save"}
           onClick={() => runThumbnailAction("save")}
         >
           {thumbnail.saved ? <Check aria-hidden="true" size={15} /> : <Save aria-hidden="true" size={15} />}
+          {thumbnail.saved ? "Saved" : "Save Photo"}
         </button>
         <a
-          className="secondary-button icon-button"
+          className="secondary-button thumbnail-action-button"
           href={thumbnail.publicUrl}
           download
           title="Download"
           aria-label="Download"
         >
           <Download aria-hidden="true" size={15} />
+          Download
         </a>
         <button
-          className="secondary-button icon-button"
+          className="secondary-button thumbnail-action-button"
           disabled={Boolean(isBusy)}
           title="Regenerate this image"
           aria-label="Regenerate this image"
           onClick={() => runThumbnailAction("regenerate")}
         >
           <RefreshCcw aria-hidden="true" size={15} />
+          Regenerate
         </button>
         <button
-          className="danger-button icon-button"
+          className="danger-button thumbnail-action-button"
           disabled={Boolean(isBusy)}
           title="Delete"
           aria-label="Delete thumbnail"
           onClick={() => runThumbnailAction("delete")}
         >
           <Trash2 aria-hidden="true" size={15} />
+          Delete
         </button>
       </div>
+      {actionMessage ? <div className="thumbnail-action-message">{actionMessage}</div> : null}
     </figure>
   );
 }

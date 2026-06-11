@@ -38,7 +38,9 @@ export async function generateCreativePack(input: CreativeInput): Promise<Creati
   const openai = getClient();
 
   if (!openai) {
-    return fallbackCreativePack(input);
+    throw new Error(
+      "OpenAI is not configured. Add OPENAI_API_KEY in your environment and redeploy before generating."
+    );
   }
 
   const system = [
@@ -91,7 +93,9 @@ export async function generateThumbnailImage(input: ThumbnailInput) {
   const openai = getClient();
 
   if (!openai) {
-    return generateSvgPlaceholder(input);
+    throw new Error(
+      "OpenAI image generation is not configured. Add OPENAI_API_KEY in your environment and redeploy before generating thumbnails."
+    );
   }
 
   const size = getOpenAIImageSize(input.format);
