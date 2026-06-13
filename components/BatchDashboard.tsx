@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -34,6 +34,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const [processMessage, setProcessMessage] = useState<string | null>(null);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [hasAutoStartedGeneration, setHasAutoStartedGeneration] = useState(false);
   const [youtubeStatus, setYouTubeStatus] = useState<YouTubeStatus | null>(null);
 
   const isRunning = useMemo(() => {
@@ -84,7 +85,7 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
         batch.videos.some((video) => video.status === "queued" || video.status === "failed"))
   );
 
-  async function runBatchProcessing() {
+  const runBatchProcessing = useCallback(async () => {
     setIsProcessingBatch(true);
     setProcessMessage(null);
     setError(null);
@@ -109,7 +110,14 @@ export function BatchDashboard({ batchId, initialBatch }: BatchDashboardProps) {
     } finally {
       setIsProcessingBatch(false);
     }
-  }
+  }, [batchId]);
+
+  useEffect(() => {
+    if (!needsGeneration || isProcessingBatch || hasAutoStartedGeneration) return;
+
+    setHasAutoStartedGeneration(true);
+    void runBatchProcessing();
+  }, [needsGeneration, isProcessingBatch, hasAutoStartedGeneration, runBatchProcessing]);
 
   return (
     <main className="app-shell">

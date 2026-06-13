@@ -47,7 +47,7 @@ export function getYouTubeRedirectUri() {
 }
 
 export function shouldUseInngest() {
-  return Boolean(getEnv("INNGEST_EVENT_KEY") || getEnv("INNGEST_DEV"));
+  return Boolean(isUsableEnv("INNGEST_EVENT_KEY") && isUsableEnv("INNGEST_SIGNING_KEY"));
 }
 
 export function getStorageBucket() {
