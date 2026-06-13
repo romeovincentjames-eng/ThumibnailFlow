@@ -607,8 +607,7 @@ function ThumbnailFrame({
         </button>
         <a
           className="secondary-button thumbnail-action-button"
-          href={thumbnail.publicUrl}
-          download
+          href={`/api/thumbnails/${thumbnail.id}/download`}
           title="Download"
           aria-label="Download"
         >
