@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, CreditCard } from "lucide-react";
 import { MarketingFooter, MarketingNav } from "@/components/Marketing";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getOrCreateBillingAccount } from "@/lib/billingSession";
@@ -73,6 +73,14 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                       : `Plan: ${billing.account.planKey}. Credits are tied to ${user?.email}.`
                     : "Run the billing schema in Supabase to activate account balances."}
                 </p>
+                {billing?.account?.stripeCustomerId && stripeSecretConfigured ? (
+                  <form action="/api/stripe/portal" method="POST">
+                    <button className="secondary-button" type="submit">
+                      Manage billing
+                      <CreditCard aria-hidden="true" size={17} />
+                    </button>
+                  </form>
+                ) : null}
               </>
             ) : (
               <>
